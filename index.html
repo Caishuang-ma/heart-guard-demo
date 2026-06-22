@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>心守 · HeartGuard v6.9</title>
+<title>心守 · HeartGuard v7.1</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   body {
@@ -126,32 +126,131 @@
   .notification-strip.low { background: linear-gradient(180deg, rgba(255,183,77,0.65), transparent); }
   .notification-strip.crisis { background: linear-gradient(180deg, rgba(77,208,225,0.65), transparent); }
 
-  /* 音乐屏 */
-  /* 音乐屏 —— 直接用设计稿作为界面 */
+  /* ===== 音乐屏 v7.1 —— 设计背景 + 代码UI叠加 ===== */
   #screen-music { padding: 0; gap: 0; }
   .ms-design { position: absolute; inset: 0; overflow: hidden; }
-  .ms-bg { position: absolute; inset: 0; background-size: 100% 100%; background-position: center; transition: opacity 0.6s ease; }
-  /* 透明热区基类 */
-  .ms-hot { position: absolute; background: transparent; border: none; padding: 0; margin: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; z-index: 5; }
-  .ms-hot:active { background: rgba(255,255,255,0.12); border-radius: 8px; }
-  /* 各控件热区（按设计稿坐标定位）*/
-  .ms-hot-back { left: 2%;  top: 10.5%; width: 14%; height: 6%; border-radius: 50%; }
-  .ms-hot-qq   { right: 2%; top: 10.5%; width: 14%; height: 6%; border-radius: 50%; }
-  .ms-hot-prog { left: 16%; top: 65.5%; width: 68%; height: 5%; }
-  .ms-hot-prev { left: 17%; top: 71%; width: 16%; height: 10%; border-radius: 50%; }
-  .ms-hot-play { left: 42%; top: 70%; width: 16%; height: 12%; border-radius: 50%; }
-  .ms-hot-next { left: 67%; top: 71%; width: 16%; height: 10%; border-radius: 50%; }
-  /* 进度填充（半透明覆盖在设计稿进度条上）*/
-  .ms-prog-fill { position: absolute; left: 16%; top: 67.4%; height: 2px; background: rgba(255,255,255,0.9); width: 0%; max-width: 68%; border-radius: 2px; z-index: 6; pointer-events: none; box-shadow: 0 0 4px rgba(255,255,255,0.6); transition: width 1s linear; }
-  /* 播放状态指示（暂停时在中央播放键显示一个柔和图标）*/
-  .ms-play-icon { position: absolute; left: 42%; top: 70%; width: 16%; height: 12%; display: flex; align-items: center; justify-content: center; font-size: 16px; color: rgba(255,255,255,0.95); z-index: 6; pointer-events: none; opacity: 0; transition: opacity 0.3s; text-shadow: 0 1px 4px rgba(0,0,0,0.5); }
-  .ms-play-icon.show { opacity: 1; }
-  /* 底部情绪标签热区 */
-  .ms-hot-mood { top: 87.5%; height: 5.5%; border-radius: 12px; }
-  /* 歌曲信息覆盖（松设计稿上方）*/
-  .ms-song-overlay { position: absolute; left: 12%; top: 57%; width: 76%; z-index: 7; pointer-events: none; text-align: center; }
-  .ms-song-ov-name { font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.95); text-shadow: 0 1px 6px rgba(0,0,0,0.6); }
-  .ms-song-ov-artist { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 2px; text-shadow: 0 1px 4px rgba(0,0,0,0.5); }
+  .ms-bg {
+    position: absolute; inset: 0;
+    background-size: cover; background-position: center;
+    transition: opacity 0.8s ease;
+  }
+
+  /* ---- 顶部导航栏（半透明渐变遮罩）---- */
+  .ms-top-bar {
+    position: absolute; top: 0; left: 0; right: 0; height: 13%;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 14px;
+    z-index: 10;
+    background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.2) 70%, transparent 100%);
+  }
+  .ms-top-btn {
+    width: 30px; height: 30px; border-radius: 50%; border: none;
+    background: rgba(255,255,255,0.1); color: #fff; font-size: 14px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  }
+  .ms-top-btn:active { background: rgba(255,255,255,0.22); }
+  .ms-top-title {
+    font-size: 12.5px; color: rgba(255,255,255,0.88);
+    letter-spacing: 2px; font-weight: 300;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  }
+
+  /* ---- 歌曲信息区（中央偏下，带深色遮罩）---- */
+  .ms-song-area {
+    position: absolute; left: 8%; top: 53%; width: 84%; height: 15%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 10; pointer-events: none;
+    background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.35) 40%, rgba(0,0,0,0.45) 100%);
+    border-radius: 14px;
+  }
+  .ms-song-name {
+    font-size: 17px; font-weight: 600; color: #fff;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.6), 0 0 20px rgba(124,108,248,0.3);
+    letter-spacing: 1px;
+  }
+  .ms-song-artist {
+    font-size: 11px; color: rgba(255,255,255,0.65); margin-top: 3px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  }
+
+  /* ---- 进度条区域 ---- */
+  .ms-prog-area {
+    position: absolute; left: 12%; top: 68%; width: 76%; height: 5%;
+    z-index: 10; cursor: pointer;
+  }
+  .ms-prog-track {
+    width: 100%; height: 2.5px; background: rgba(255,255,255,0.18);
+    border-radius: 2px; position: relative;
+  }
+  .ms-prog-fill {
+    position: absolute; left: 0; top: 0; height: 100%;
+    background: linear-gradient(90deg, #7c6cf8, #f06292);
+    border-radius: 2px; width: 0%;
+    box-shadow: 0 0 6px rgba(124,108,248,0.5);
+    transition: width 0.8s linear;
+  }
+  .ms-prog-dot {
+    position: absolute; top: 50%; transform: translate(-50%,-50%);
+    width: 11px; height: 11px; border-radius: 50%;
+    background: #fff; box-shadow: 0 0 8px rgba(124,108,248,0.6);
+    left: 0%; transition: left 0.8s linear;
+  }
+  .ms-prog-time {
+    display: flex; justify-content: space-between;
+    margin-top: 4px; font-size: 9.5px; color: rgba(255,255,255,0.45);
+  }
+
+  /* ---- 播放控制按钮 ---- */
+  .ms-ctrls {
+    position: absolute; left: 0; right: 0; top: 73.5%;
+    display: flex; align-items: center; justify-content: center; gap: 28px;
+    z-index: 10;
+  }
+  .ms-ctrl-btn {
+    width: 42px; height: 42px; border-radius: 50%; border: none;
+    background: rgba(255,255,255,0.08); color: #fff; font-size: 17px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    transition: all 0.25s ease;
+  }
+  .ms-ctrl-btn:active { background: rgba(255,255,255,0.22); transform: scale(0.92); }
+  .ms-ctrl-btn.play-btn {
+    width: 54px; height: 54px;
+    background: linear-gradient(135deg, rgba(124,108,248,0.75), rgba(240,98,146,0.65));
+    border: 1.5px solid rgba(255,255,255,0.2);
+    box-shadow: 0 4px 20px rgba(124,108,248,0.35);
+    font-size: 20px;
+  }
+  .ms-ctrl-btn.play-btn:active { transform: scale(0.88); }
+
+  /* ---- 底部主题标签栏 ---- */
+  .ms-theme-bar {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 20%;
+    display: flex; align-items: center; justify-content: space-around; padding: 0 4%;
+    z-index: 10;
+    background: linear-gradient(0deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.25) 60%, transparent 100%);
+  }
+  .ms-theme-item {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    cursor: pointer; padding: 4px 6px; border-radius: 12px;
+    transition: all 0.3s ease; min-width: 48px;
+  }
+  .ms-theme-item:active { background: rgba(255,255,255,0.1); }
+  .ms-theme-item.active .ms-theme-icon {
+    box-shadow: 0 0 0 2px rgba(124,108,248,0.6), 0 0 16px rgba(124,108,248,0.35);
+  }
+  .ms-theme-item.active .ms-theme-label { color: #c8b8ff; }
+  .ms-theme-icon {
+    width: 34px; height: 34px; border-radius: 10px;
+    background-size: cover; background-position: center;
+    border: 1.5px solid rgba(255,255,255,0.15);
+    transition: all 0.3s ease;
+  }
+  .ms-theme-label {
+    font-size: 9px; color: rgba(255,255,255,0.55);
+    letter-spacing: 0.5px; transition: color 0.3s;
+  }
 
   /* 呼吸屏 */
   #screen-breathe { align-items: center; justify-content: center; }
@@ -311,38 +410,52 @@
       </div>
     </div>
 
-    <!-- 音乐屏 —— 设计稿直接作为界面 -->
+    <!-- 音乐屏 —— 设计背景 + 代码UI叠加 -->
     <div class="screen" id="screen-music">
       <div class="ms-design" id="ms-design">
-        <!-- 设计稿背景 -->
+        <!-- 设计稿纯背景（无文字/控件） -->
         <div class="ms-bg" id="ms-bg"></div>
-        <!-- 进度填充覆盖层 -->
-        <div class="ms-prog-fill" id="progress-fill"></div>
-        <!-- 播放状态图标（暂停时显示） -->
-        <div class="ms-play-icon" id="ms-play-icon">▶</div>
-        <!-- 透明热区：控件 -->
-        <button class="ms-hot ms-hot-back" onclick="gotoScreen('home')" title="返回"></button>
-        <button class="ms-hot ms-hot-qq"   onclick="openQQMusic()" title="QQ音乐"></button>
-        <button class="ms-hot ms-hot-prev" onclick="prevSong()"></button>
-        <button class="ms-hot ms-hot-play" id="play-btn" onclick="togglePlay()"></button>
-        <button class="ms-hot ms-hot-next" onclick="nextSong()"></button>
-        <button class="ms-hot ms-hot-prog" id="progress-bar" onclick="seekByClick(event)"></button>
-        <!-- 底部情绪标签热区（5个：放松/舒缓/专注/活力/自定义）-->
-        <button class="ms-hot ms-hot-mood" style="left:13%;  width:14%;" onclick="switchDesign(0)"></button>
-        <button class="ms-hot ms-hot-mood" style="left:30%;  width:14%;" onclick="switchDesign(1)"></button>
-        <button class="ms-hot ms-hot-mood" style="left:47%;  width:14%;" onclick="switchDesign(2)"></button>
-        <button class="ms-hot ms-hot-mood" style="left:64%;  width:14%;" onclick="switchDesign(3)"></button>
-        <button class="ms-hot ms-hot-mood" style="left:78%;  width:18%;" onclick="switchDesign(4)"></button>
-        <span id="music-title"    style="display:none"></span>
-        <span id="music-artist"   style="display:none"></span>
-        <span id="progress-cur"   style="display:none"></span>
+
+        <!-- 顶部导航栏 -->
+        <div class="ms-top-bar">
+          <button class="ms-top-btn" onclick="gotoScreen('home')" title="返回">←</button>
+          <span class="ms-top-title">♪ 音乐疗愈 ♪</span>
+          <button class="ms-top-btn" onclick="openQQMusic()" title="QQ音乐">☊</button>
+        </div>
+
+        <!-- 歌曲信息区 -->
+        <div class="ms-song-area" id="ms-song-area">
+          <div class="ms-song-name" id="ms-song-ov-name">七月上</div>
+          <div class="ms-song-artist" id="ms-song-ov-artist">Jam</div>
+        </div>
+
+        <!-- 进度条 -->
+        <div class="ms-prog-area" id="progress-bar" onclick="seekByClick(event)">
+          <div class="ms-prog-track">
+            <div class="ms-prog-fill" id="progress-fill"></div>
+            <div class="ms-prog-dot" id="prog-dot"></div>
+          </div>
+          <div class="ms-prog-time">
+            <span id="prog-cur">0:00</span>
+            <span id="prog-total">3:35</span>
+          </div>
+        </div>
+
+        <!-- 播放控制按钮 -->
+        <div class="ms-ctrls">
+          <button class="ms-ctrl-btn" onclick="prevSong()" title="上一首">⏮</button>
+          <button class="ms-ctrl-btn play-btn" id="play-btn" onclick="togglePlay()" title="播放/暂停">⏸</button>
+          <button class="ms-ctrl-btn" onclick="nextSong()" title="下一首">⏭</button>
+        </div>
+
+        <!-- 底部4+1主题标签栏 -->
+        <div class="ms-theme-bar" id="ms-theme-bar"></div>
+
+        <!-- 隐藏数据 -->
+        <span id="music-title" style="display:none"></span>
+        <span id="music-artist" style="display:none"></span>
+        <span id="progress-cur" style="display:none"></span>
         <span id="progress-total" style="display:none"></span>
-        <span id="ms-hrdot"       style="display:none"></span>
-        <span id="ms-hrtext"      style="display:none"></span>
-        <span id="ms-hrbpm"       style="display:none"></span>
-        <span id="ms-moods"       style="display:none"></span>
-        <!-- 歌曲名覆盖层 -->
-        <div class="ms-song-overlay" id="ms-song-overlay"><div class="ms-song-ov-name" id="ms-song-ov-name">七月上</div><div class="ms-song-ov-artist" id="ms-song-ov-artist">Jam</div></div>
       </div>
     </div>
 
@@ -1110,8 +1223,8 @@ function loadSong() {
 
 function setPlayState(playing) {
   state.isPlaying = playing;
-  var icon = document.getElementById('ms-play-icon');
-  if (icon) icon.classList.toggle('show', !playing);
+  var btn = document.getElementById('play-btn');
+  if (btn) btn.textContent = playing ? '⏸' : '▶';
 }
 
 function togglePlay() {
@@ -1126,7 +1239,7 @@ function togglePlay() {
 
 function nextSong() {
   state.currentSongIdx++;
-  themeIdx = (themeIdx + 1) % 4; // 轮换到下一个固定主题
+  currentTheme = (currentTheme + 1) % 4; // 轮换到下一个固定主题
   applyDesignBg();
   var list = songLibrary[state.currentMode] || songLibrary.good;
   var song = list[state.currentSongIdx % list.length];
@@ -1138,8 +1251,6 @@ function nextSong() {
   if (a) a.textContent = song.artist;
   state._songName = song.name;
   state._songArtist = song.artist;
-  themeIdx = (themeIdx + 1) % 4;
-  applyDesignBg();
   if (state.isPlaying) { stopTones(); playTones(state.currentMode); setPlayState(true); }
 }
 function prevSong() {
@@ -1172,49 +1283,67 @@ function seekByClick(e) {
     var elapsed = (Date.now() - startAt) / 1000;
     if (elapsed >= duration) { clearInterval(fakePBar); fakePBar=null; }
     var ep = Math.min(100, (elapsed/duration)*100);
-    document.getElementById('progress-fill').style.width = (ep/100*68)+'%';
-    document.getElementById('progress-cur').textContent = formatTime(Math.max(0,elapsed));
-    document.getElementById('progress-total').textContent = formatTime(duration);
+    document.getElementById('progress-fill').style.width = ep + '%';
+    var dot = document.getElementById('prog-dot');
+    if (dot) dot.style.left = ep + '%';
+    var curEl = document.getElementById('prog-cur');
+    if (curEl) curEl.textContent = formatTime(Math.max(0,elapsed));
+    var totEl = document.getElementById('prog-total');
+    if (totEl) totEl.textContent = formatTime(duration);
   }, 1000);
   // 如果正在播放，重新触发音调
   if (state.isPlaying) { stopTones(); playTones(state.currentMode); setPlayState(true); }
 }
 
 // 点击底部情绪标签切换设计稿——现在用7主题轮换
-function switchDesign(idx) {
-  // idx: 0=放松(theme1) 1=治愈(theme2) 2=专注(theme3) 3=活力(theme4) 4=随机彩蛋
-  var themes = [1, 2, 3, 4];
-  var tid = idx < 4 ? themes[idx] : easterEggs[Math.floor(Math.random()*easterEggs.length)];
-  themeIdx = themes.indexOf(tid);
-  if (themeIdx < 0) themeIdx = 0;
+// ===== 设计背景 + 主题栏系统 v7.1 =====
+// bg1~bg7 = 7张设计稿纯背景（无文字/控件）
+// 4固定主题(1-4) + 3彩蛋(5-7)
+var themeInfo = [
+  { id: 1, name: '放松', icon: '🌸', color: '#a78bfa' },
+  { id: 2, name: '治愈', icon: '🌿', color: '#34d399' },
+  { id: 3, name: '专注', icon: '✨', color: '#fbbf24' },
+  { id: 4, name: '活力', icon: '💎', color: '#22d3ee' },
+  { id: 5, name: '彩蛋', icon: '🎲', color: '#f472b6' },
+  { id: 6, name: '彩蛋', icon: '🌙', color: '#818cf8' },
+  { id: 7, name: '彩蛋', icon: '⭐', color: '#fb923c' },
+];
+var fixedThemes = [0, 1, 2, 3];   // 放松/治愈/专注/活力 的索引
+var easterIdxs = [4, 5, 6];       // 彩蛋的索引
+var currentTheme = 0;             // 当前选中的主题（在themeInfo中的索引）
 
+function buildThemeBar() {
+  var bar = document.getElementById('ms-theme-bar');
+  if (!bar) return;
+  bar.innerHTML = '';
+  // 显示4个固定主题
+  for (var i = 0; i < 4; i++) {
+    var t = themeInfo[i];
+    var item = document.createElement('div');
+    item.className = 'ms-theme-item' + (i === currentTheme ? ' active' : '');
+    item.innerHTML =
+      '<div class="ms-theme-icon" style="background-image:url(imgs/bg' + (i+1) + '.jpg)" title="' + t.name + '"></div>' +
+      '<span class="ms-theme-label">' + t.name + '</span>';
+    (function(idx){ item.onclick = function() { switchDesign(idx); }; })(i);
+    bar.appendChild(item);
+  }
+}
+
+function applyDesignBg() {
+  var ti = themeInfo[currentTheme];
   var bg = document.getElementById('ms-bg');
-  if (bg) bg.style.backgroundImage = 'url(imgs/theme' + tid + '.jpg)';
-  // 高亮对应热区
-  var tabMap = {1:0, 2:1, 3:2, 4:3};
-  document.querySelectorAll('.ms-hot-mood').forEach(function(h,j){
-    h.style.background = (j === idx) ? 'rgba(255,255,255,0.08)' : 'transparent';
+  if (bg) bg.style.backgroundImage = 'url(imgs/bg' + ti.id + '.jpg)';
+  // 高亮当前主题标签
+  document.querySelectorAll('.ms-theme-item').forEach(function(el, i){
+    el.classList.toggle('active', i === currentTheme);
   });
 }
 
-// 设计稿轮换 —— 7张原图直接缩放（无模糊），4固定主题 + 3彩蛋
-// theme1.jpg=放松  theme2.jpg=治愈  theme3.jpg=专注  theme4.jpg=活力
-// theme5.jpg=彩蛋1  theme6.jpg=彩蛋2  theme7.jpg=彩蛋3
-var themeCycle = [1, 2, 3, 4];
-var themeIdx = 0;
-var easterEggs = [5, 6, 7];
-
-function applyDesignBg() {
-  var idx = themeCycle[themeIdx % 4];
-  // 20% 概率触发彩蛋
-  if (Math.random() < 0.2) idx = easterEggs[Math.floor(Math.random() * easterEggs.length)];
-  var bg = document.getElementById('ms-bg');
-  if (bg) bg.style.backgroundImage = 'url(imgs/theme' + idx + '.jpg)';
-  // 同步底部情绪标签热区高亮
-  var tabMap = {1:0, 2:1, 3:2, 4:3};
-  document.querySelectorAll('.ms-hot-mood').forEach(function(h,j){
-    h.style.background = (j === (tabMap[idx]||0)) ? 'rgba(255,255,255,0.08)' : 'transparent';
-  });
+function switchDesign(idx) {
+  if (idx >= 0 && idx < themeInfo.length) {
+    currentTheme = idx;
+  }
+  applyDesignBg();
 }
 
 function stopAllTones() {
@@ -2193,6 +2322,9 @@ function lbNav(e, dir) {
 }
 
 initGallery();
+// 初始化音乐屏
+buildThemeBar();
+applyDesignBg();
 </script>
 
 <!-- 全局错误捕获 -->
