@@ -127,39 +127,27 @@
   .notification-strip.crisis { background: linear-gradient(180deg, rgba(77,208,225,0.65), transparent); }
 
   /* 音乐屏 */
-  /* 音乐屏 —— 沉浸式播放器（按设计稿重做）*/
+  /* 音乐屏 —— 直接用设计稿作为界面 */
   #screen-music { padding: 0; gap: 0; }
-  .ms-player { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; transition: background 0.8s ease; }
-  /* 顶部栏 */
-  .ms-topbar { display: flex; align-items: center; gap: 8px; padding: 12px 14px 6px; flex-shrink: 0; z-index: 3; }
-  .ms-back { width: 26px; height: 26px; border-radius: 50%; border: none; background: rgba(255,255,255,0.12); color: #fff; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .ms-back:active { background: rgba(255,255,255,0.25); }
-  .ms-brand { font-size: 11px; color: rgba(255,255,255,0.85); letter-spacing: 1px; flex: 1; text-align: center; }
-  .ms-qq { width: 26px; height: 26px; border-radius: 50%; border: none; background: rgba(255,255,255,0.12); color: #fff; font-size: 13px; cursor: pointer; flex-shrink: 0; }
-  /* 心率状态行 */
-  .ms-hrline { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 10px; color: rgba(255,255,255,0.75); padding: 2px 14px 4px; flex-shrink: 0; z-index: 3; }
-  .ms-hrdot { width: 6px; height: 6px; border-radius: 50%; background: #4caf50; box-shadow: 0 0 6px #4caf50; }
-  /* 中央可视化 */
-  .ms-viz-wrap { flex: 1; position: relative; display: flex; align-items: center; justify-content: center; min-height: 0; z-index: 1; }
-  .ms-viz-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
-  /* 歌曲信息 */
-  .ms-song { text-align: center; padding: 2px 14px; flex-shrink: 0; z-index: 3; }
-  .ms-song-name { font-size: 15px; font-weight: 600; color: #fff; }
-  .ms-song-artist { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 2px; }
-  /* 进度 */
-  .ms-progress-wrap { padding: 6px 18px 2px; flex-shrink: 0; z-index: 3; }
-  .ms-progress-bar { height: 3px; background: rgba(255,255,255,0.18); border-radius: 2px; cursor: pointer; position: relative; }
-  .ms-progress-fill { height: 100%; background: #fff; border-radius: 2px; width: 0%; transition: width 1s linear; }
-  .ms-progress-time { display: flex; justify-content: space-between; font-size: 9px; color: rgba(255,255,255,0.55); margin-top: 4px; }
-  /* 控制 */
-  .ms-controls { display: flex; gap: 18px; justify-content: center; align-items: center; padding: 6px 0 8px; flex-shrink: 0; z-index: 3; }
-  .ms-ctrl { width: 34px; height: 34px; border-radius: 50%; border: none; background: rgba(255,255,255,0.12); color: #fff; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-  .ms-ctrl:active { background: rgba(255,255,255,0.25); }
-  .ms-ctrl.play { width: 46px; height: 46px; font-size: 18px; background: rgba(255,255,255,0.95); color: #222; }
-  /* 底部情绪标签 */
-  .ms-moods { display: flex; gap: 4px; justify-content: center; padding: 4px 8px 12px; flex-shrink: 0; z-index: 3; }
-  .ms-mood { padding: 5px 10px; border-radius: 12px; font-size: 10px; color: rgba(255,255,255,0.6); cursor: pointer; transition: all 0.3s; border: 1px solid transparent; }
-  .ms-mood.active { background: rgba(255,255,255,0.18); color: #fff; border-color: rgba(255,255,255,0.3); }
+  .ms-design { position: absolute; inset: 0; overflow: hidden; }
+  .ms-bg { position: absolute; inset: 0; background-size: cover; background-position: center; transition: opacity 0.6s ease; }
+  /* 透明热区基类 */
+  .ms-hot { position: absolute; background: transparent; border: none; padding: 0; margin: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; z-index: 5; }
+  .ms-hot:active { background: rgba(255,255,255,0.12); border-radius: 8px; }
+  /* 各控件热区（按设计稿坐标定位）*/
+  .ms-hot-back { left: 2%;  top: 10.5%; width: 14%; height: 6%; border-radius: 50%; }
+  .ms-hot-qq   { right: 2%; top: 10.5%; width: 14%; height: 6%; border-radius: 50%; }
+  .ms-hot-prog { left: 16%; top: 65.5%; width: 68%; height: 5%; }
+  .ms-hot-prev { left: 17%; top: 71%; width: 16%; height: 10%; border-radius: 50%; }
+  .ms-hot-play { left: 42%; top: 70%; width: 16%; height: 12%; border-radius: 50%; }
+  .ms-hot-next { left: 67%; top: 71%; width: 16%; height: 10%; border-radius: 50%; }
+  /* 进度填充（半透明覆盖在设计稿进度条上）*/
+  .ms-prog-fill { position: absolute; left: 16%; top: 67.4%; height: 2px; background: rgba(255,255,255,0.9); width: 0%; max-width: 68%; border-radius: 2px; z-index: 6; pointer-events: none; box-shadow: 0 0 4px rgba(255,255,255,0.6); transition: width 1s linear; }
+  /* 播放状态指示（暂停时在中央播放键显示一个柔和图标）*/
+  .ms-play-icon { position: absolute; left: 42%; top: 70%; width: 16%; height: 12%; display: flex; align-items: center; justify-content: center; font-size: 16px; color: rgba(255,255,255,0.95); z-index: 6; pointer-events: none; opacity: 0; transition: opacity 0.3s; text-shadow: 0 1px 4px rgba(0,0,0,0.5); }
+  .ms-play-icon.show { opacity: 1; }
+  /* 底部情绪标签热区 */
+  .ms-hot-mood { top: 87.5%; height: 5.5%; border-radius: 12px; }
 
   /* 呼吸屏 */
   #screen-breathe { align-items: center; justify-content: center; }
@@ -319,40 +307,37 @@
       </div>
     </div>
 
-    <!-- 音乐屏 —— 沉浸式播放器（按设计稿） -->
+    <!-- 音乐屏 —— 设计稿直接作为界面 -->
     <div class="screen" id="screen-music">
-      <div class="ms-player" id="ms-player">
-        <div class="ms-topbar">
-          <button class="ms-back" onclick="gotoScreen('home')" title="返回主页">←</button>
-          <div class="ms-brand">心守 · HeartGuard</div>
-          <button class="ms-qq" onclick="openQQMusic()" title="QQ音乐">🎶</button>
-        </div>
-        <div class="ms-hrline">
-          <span class="ms-hrdot" id="ms-hrdot"></span>
-          <span id="ms-hrtext">心率良好</span>
-          <span style="opacity:0.5">·</span>
-          <span id="ms-hrbpm">72 BPM</span>
-        </div>
-        <div class="ms-viz-wrap">
-          <canvas class="ms-viz-canvas" id="viz-canvas" width="290" height="280"></canvas>
-        </div>
-        <div class="ms-song">
-          <div class="ms-song-name" id="music-title">未播放</div>
-          <div class="ms-song-artist" id="music-artist">选择一首歌开始</div>
-        </div>
-        <div class="ms-progress-wrap">
-          <div class="ms-progress-bar" id="progress-bar"><div class="ms-progress-fill" id="progress-fill"></div></div>
-          <div class="ms-progress-time">
-            <span id="progress-cur">0:00</span>
-            <span id="progress-total">0:00</span>
-          </div>
-        </div>
-        <div class="ms-controls">
-          <button class="ms-ctrl" onclick="prevSong()">⏮</button>
-          <button class="ms-ctrl play" id="play-btn" onclick="togglePlay()">▶</button>
-          <button class="ms-ctrl" onclick="nextSong()">⏭</button>
-        </div>
-        <div class="ms-moods" id="ms-moods"></div>
+      <div class="ms-design" id="ms-design">
+        <!-- 设计稿背景 -->
+        <div class="ms-bg" id="ms-bg"></div>
+        <!-- 进度填充覆盖层 -->
+        <div class="ms-prog-fill" id="progress-fill"></div>
+        <!-- 播放状态图标（暂停时显示） -->
+        <div class="ms-play-icon" id="ms-play-icon">▶</div>
+        <!-- 透明热区：控件 -->
+        <button class="ms-hot ms-hot-back" onclick="gotoScreen('home')" title="返回"></button>
+        <button class="ms-hot ms-hot-qq"   onclick="openQQMusic()" title="QQ音乐"></button>
+        <button class="ms-hot ms-hot-prev" onclick="prevSong()"></button>
+        <button class="ms-hot ms-hot-play" id="play-btn" onclick="togglePlay()"></button>
+        <button class="ms-hot ms-hot-next" onclick="nextSong()"></button>
+        <button class="ms-hot ms-hot-prog" id="progress-bar" onclick="seekByClick(event)"></button>
+        <!-- 底部情绪标签热区（5个：放松/舒缓/专注/活力/自定义）-->
+        <button class="ms-hot ms-hot-mood" style="left:13%;  width:14%;" onclick="switchDesign(0)"></button>
+        <button class="ms-hot ms-hot-mood" style="left:30%;  width:14%;" onclick="switchDesign(1)"></button>
+        <button class="ms-hot ms-hot-mood" style="left:47%;  width:14%;" onclick="switchDesign(2)"></button>
+        <button class="ms-hot ms-hot-mood" style="left:64%;  width:14%;" onclick="switchDesign(3)"></button>
+        <button class="ms-hot ms-hot-mood" style="left:78%;  width:18%;" onclick="switchDesign(4)"></button>
+        <!-- 隐藏的 DOM 占位（JS 还在引用这些 ID）-->
+        <span id="music-title"    style="display:none"></span>
+        <span id="music-artist"   style="display:none"></span>
+        <span id="progress-cur"   style="display:none"></span>
+        <span id="progress-total" style="display:none"></span>
+        <span id="ms-hrdot"       style="display:none"></span>
+        <span id="ms-hrtext"      style="display:none"></span>
+        <span id="ms-hrbpm"       style="display:none"></span>
+        <span id="ms-moods"       style="display:none"></span>
       </div>
     </div>
 
@@ -972,7 +957,8 @@ function ensureAudio() {
     audioEl.addEventListener('timeupdate', function() {
       if (audioEl.duration && isFinite(audioEl.duration)) {
         var pct = (audioEl.currentTime / audioEl.duration) * 100;
-        document.getElementById('progress-fill').style.width = pct + '%';
+        // 进度条覆盖在设计稿 16%~84% 区间（宽 68%）
+        document.getElementById('progress-fill').style.width = (pct / 100 * 68) + '%';
         document.getElementById('progress-cur').textContent = formatTime(audioEl.currentTime);
         document.getElementById('progress-total').textContent = formatTime(audioEl.duration);
       }
@@ -1014,23 +1000,23 @@ function loadSong() {
   a.load();
 }
 
+function setPlayState(playing) {
+  state.isPlaying = playing;
+  var icon = document.getElementById('ms-play-icon');
+  if (icon) icon.classList.toggle('show', !playing); // 暂停时显示▶提示
+}
+
 function togglePlay() {
   var a = ensureAudio();
   if (state.isPlaying) {
     a.pause();
-    state.isPlaying = false;
-    document.getElementById('play-btn').textContent = '▶';
+    setPlayState(false);
   } else {
     var list = songLibrary[state.currentMode] || songLibrary.good;
     var song = list[state.currentSongIdx % list.length];
-    if (!a.src || a.src.indexOf('id=' + song.id) === -1) {
-      a.src = getSongUrl(song.id);
-    }
-    a.play().catch(function(e) {
-      showNotification('⚠️ 播放失败，请重试');
-    });
-    state.isPlaying = true;
-    document.getElementById('play-btn').textContent = '⏸';
+    if (!a.src || a.src.indexOf('id=' + song.id) === -1) a.src = getSongUrl(song.id);
+    a.play().catch(function() { showNotification('⚠️ 播放失败，请重试'); });
+    setPlayState(true);
   }
 }
 
@@ -1060,6 +1046,32 @@ function prevSong() {
   a.src = getSongUrl(song.id);
   a.load();
   if (state.isPlaying) { a.play().catch(function(){}); }
+}
+
+// 点击进度条热区跳转
+function seekByClick(e) {
+  if (!audioEl || !audioEl.duration) return;
+  var rect = e.currentTarget.getBoundingClientRect();
+  var pct = (e.clientX - rect.left) / rect.width;
+  audioEl.currentTime = pct * audioEl.duration;
+}
+
+// 点击底部情绪标签切换设计稿
+var designModes = ['good','low','high','crisis','crisis']; // 5 tabs → 4 designs
+function switchDesign(idx) {
+  var mode = designModes[idx] || 'good';
+  state.currentMode = mode;
+  state.currentSongIdx = 0;
+  updateMoodBar(mode);
+  loadSong();
+  applyDesignBg();
+  if (state.isPlaying) { var a = ensureAudio(); a.play().catch(function(){}); }
+}
+
+function applyDesignBg() {
+  var map = { good: 'imgs/design1.jpg', high: 'imgs/design5.jpg', low: 'imgs/design6.jpg', crisis: 'imgs/design7.jpg' };
+  var bg = document.getElementById('ms-bg');
+  if (bg) bg.style.backgroundImage = 'url(' + (map[state.currentMode] || map.good) + ')';
 }
 
 function stopAllTones() {
@@ -1103,7 +1115,7 @@ function gotoScreen(name) {
   if (dots[idx]) dots[idx].classList.add('active');
   state.currentScreen = name;
   if (name === 'emotion') updateEmotionScreen();
-  if (name === 'music' && typeof applyMoodPalette === 'function') applyMoodPalette();
+  if (name === 'music') applyDesignBg();
   if (name === 'chat' && !state._chatInited) initChat();
 }
 
@@ -1356,83 +1368,16 @@ function startECG() {
   }, 100);
 }
 
-// ===== 音乐可视化（沉浸式大圆，按设计稿）=====
+// ===== 音乐可视化（设计稿模式：viz-canvas 已移除，保留 rAF 驱动主屏画布）=====
 var vizCanvas, vizCtx, vizFrameId;
-// 情绪模式配色方案（与设计稿对应）
-var moodPalettes = {
-  good:   { bg: ['#0c1b3a','#12224a'], ring: '#4c9eff', glow: 'rgba(76,158,255,0.25)', accent: '#80c8ff', dots: '#a0d8ff' },
-  high:   { bg: ['#1a0c3a','#2a1250'], ring: '#c86aff', glow: 'rgba(200,106,255,0.25)', accent: '#e0aaff', dots: '#f0d0ff' },
-  low:    { bg: ['#0d1f18','#0f2820'], ring: '#3ecf8e', glow: 'rgba(62,207,142,0.22)', accent: '#70e8b0', dots: '#a0f0c8' },
-  crisis: { bg: ['#2a0c18','#380a14'], ring: '#ff4e7a', glow: 'rgba(255,78,122,0.28)', accent: '#ff8a9a', dots: '#ffb0c0' },
-};
-
-var moodNames = ['放松','舒缓','专注','活力'];
-var moodModes = ['good','low','high','crisis'];  // maps to state.currentMode
-var currentMoodTab = 0;
-
-function buildMoodTabs() {
-  var el = document.getElementById('ms-moods');
-  if (!el) return;
-  el.innerHTML = '';
-  moodNames.forEach(function(name, i) {
-    var b = document.createElement('div');
-    b.className = 'ms-mood' + (i === currentMoodTab ? ' active' : '');
-    b.textContent = name;
-    b.onclick = function() {
-      currentMoodTab = i;
-      state.currentMode = moodModes[i];
-      state.currentSongIdx = 0;
-      el.querySelectorAll('.ms-mood').forEach(function(x,j){ x.classList.toggle('active', j===i); });
-      applyMoodPalette();
-      loadSong();
-      if (state.isPlaying) { var a = ensureAudio(); a.play().catch(function(){}); }
-    };
-    el.appendChild(b);
-  });
-}
-
-function applyMoodPalette() {
-  var p = moodPalettes[state.currentMode] || moodPalettes.good;
-  var player = document.getElementById('ms-player');
-  if (player) player.style.background = 'linear-gradient(180deg, ' + p.bg[0] + ' 0%, ' + p.bg[1] + ' 100%)';
-  var dot = document.getElementById('ms-hrdot');
-  if (dot) { dot.style.background = p.ring; dot.style.boxShadow = '0 0 6px ' + p.ring; }
-  // 同步底部情绪 tab 高亮
-  var tabIdx = moodModes.indexOf(state.currentMode);
-  if (tabIdx >= 0) {
-    currentMoodTab = tabIdx;
-    var el = document.getElementById('ms-moods');
-    if (el) el.querySelectorAll('.ms-mood').forEach(function(x,j){ x.classList.toggle('active', j===tabIdx); });
-  }
-  syncMusicHR();
-}
-
-function syncMusicHR() {
-  var map = {
-    good:   { text: '心率良好', bpm: 72 },
-    high:   { text: '心率偏高', bpm: 105 },
-    low:    { text: '心率偏低', bpm: 48 },
-    crisis: { text: '情绪危机', bpm: 38 },
-  };
-  var m = map[state.currentMode] || map.good;
-  var t = document.getElementById('ms-hrtext');
-  var b = document.getElementById('ms-hrbpm');
-  if (t) t.textContent = m.text;
-  if (b) b.textContent = (state.heartRate || m.bpm) + ' BPM';
-}
 
 function initViz() {
-  vizCanvas = document.getElementById('viz-canvas');
-  if (!vizCanvas) return;
-  vizCtx = vizCanvas.getContext('2d');
-  buildMoodTabs();
-  applyMoodPalette();
+  applyDesignBg();
 }
 
 function startVizLoop() {
   if (vizFrameId) return;
   function frame() {
-    drawViz();
     drawHeartscapeHome();
     drawGardenHome();
     vizFrameId = requestAnimationFrame(frame);
@@ -1440,98 +1385,7 @@ function startVizLoop() {
   frame();
 }
 
-function drawViz() {
-  if (!vizCtx || state.currentScreen !== 'music') return;
-  var W = vizCanvas.width, H = vizCanvas.height;
-  var t = Date.now() * 0.001;
-  var p = moodPalettes[state.currentMode] || moodPalettes.good;
-  var playing = state.isPlaying;
-
-  vizCtx.clearRect(0, 0, W, H);
-
-  var cx = W / 2, cy = H / 2;
-  var baseR = Math.min(W, H) * 0.30;
-  var pulse = playing ? (Math.sin(t * 1.4) * 0.07 + 0.96) : 0.95;
-
-  // 最外层光晕
-  var grad = vizCtx.createRadialGradient(cx, cy, baseR * 0.6, cx, cy, baseR * 2.0);
-  grad.addColorStop(0, p.glow);
-  grad.addColorStop(1, 'rgba(0,0,0,0)');
-  vizCtx.fillStyle = grad;
-  vizCtx.fillRect(0, 0, W, H);
-
-  // 外层粒子环 —— 旋转点
-  var numDots = 60;
-  for (var i = 0; i < numDots; i++) {
-    var angle = (i / numDots) * Math.PI * 2 + t * 0.4;
-    var spread = playing ? (1 + Math.sin(t * 2 + i * 0.5) * 0.12) : 1;
-    var r = baseR * 1.45 * spread;
-    var x = cx + Math.cos(angle) * r;
-    var y = cy + Math.sin(angle) * r;
-    var sz = playing ? (1.2 + Math.sin(t * 3 + i * 0.8) * 0.9) : 0.8;
-    vizCtx.beginPath();
-    vizCtx.arc(x, y, sz, 0, Math.PI * 2);
-    vizCtx.fillStyle = p.dots;
-    vizCtx.globalAlpha = 0.35 + Math.sin(t * 1.5 + i) * 0.2;
-    vizCtx.fill();
-  }
-
-  // 环形频谱条（中圈）
-  var bars = 48;
-  for (var i = 0; i < bars; i++) {
-    var a = (i / bars) * Math.PI * 2 - Math.PI / 2;
-    var barH = playing
-      ? (6 + Math.sin(t * 2.5 + i * 0.7) * 14 + Math.sin(t * 5.1 + i * 1.3) * 6)
-      : (3 + Math.sin(t * 0.5 + i * 0.3) * 2);
-    var r0 = baseR * 1.05;
-    var r1 = r0 + barH;
-    vizCtx.beginPath();
-    vizCtx.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0);
-    vizCtx.lineTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1);
-    vizCtx.strokeStyle = p.accent;
-    vizCtx.globalAlpha = 0.55 + (barH / 30) * 0.35;
-    vizCtx.lineWidth = 2.5;
-    vizCtx.stroke();
-  }
-
-  // 主圆盘（用 glow 颜色直接构建渐变）
-  vizCtx.globalAlpha = 1;
-  var diskGrad = vizCtx.createRadialGradient(cx, cy, 0, cx, cy, baseR * pulse);
-  diskGrad.addColorStop(0, p.glow.replace(/[\d.]+\)$/, '0.55)'));
-  diskGrad.addColorStop(0.6, p.glow.replace(/[\d.]+\)$/, '0.18)'));
-  diskGrad.addColorStop(1, 'rgba(0,0,0,0)');
-  vizCtx.fillStyle = diskGrad;
-  vizCtx.beginPath();
-  vizCtx.arc(cx, cy, baseR * pulse, 0, Math.PI * 2);
-  vizCtx.fill();
-
-  // 中心圆环（发光边）
-  vizCtx.beginPath();
-  vizCtx.arc(cx, cy, baseR * pulse, 0, Math.PI * 2);
-  vizCtx.strokeStyle = p.ring;
-  vizCtx.globalAlpha = 0.85;
-  vizCtx.lineWidth = 2;
-  vizCtx.stroke();
-
-  // 内圈呼吸圆
-  var innerR = baseR * 0.55 * pulse;
-  vizCtx.beginPath();
-  vizCtx.arc(cx, cy, innerR, 0, Math.PI * 2);
-  vizCtx.strokeStyle = p.ring;
-  vizCtx.globalAlpha = 0.45;
-  vizCtx.lineWidth = 1.2;
-  vizCtx.stroke();
-
-  // 心形 icon 居中
-  vizCtx.font = 'bold ' + Math.round(baseR * 0.5) + 'px serif';
-  vizCtx.textAlign = 'center';
-  vizCtx.textBaseline = 'middle';
-  vizCtx.globalAlpha = playing ? (0.7 + Math.sin(t * 1.4) * 0.25) : 0.55;
-  vizCtx.fillStyle = '#fff';
-  vizCtx.fillText('♡', cx, cy);
-
-  vizCtx.globalAlpha = 1;
-}
+function drawViz() {} // 音乐屏改用设计稿背景，不再需要 canvas 绘制
 
 
 // ===== QQ音乐 H5 播放器 =====
