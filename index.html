@@ -1,0 +1,1909 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>心守 · HeartGuard v6.8</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    background: #0a0a12;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, 'PingFang SC', sans-serif;
+    padding: 20px 0 40px;
+    color: #e8e8f0;
+  }
+  .app-title { color: #7c6cf8; font-size: 14px; letter-spacing: 4px; margin-bottom: 24px; opacity: 0.6; }
+
+  .watch-shell {
+    width: 320px;
+    background: linear-gradient(145deg, #2a2a3a, #1a1a28);
+    border-radius: 70px;
+    padding: 22px 18px;
+    position: relative;
+    box-shadow: 0 0 0 2px #3a3a50, 0 0 0 5px #2a2a3a, 0 30px 80px rgba(0,0,0,0.8);
+  }
+  .crown { position: absolute; right: -10px; top: 50%; transform: translateY(-50%); width: 8px; height: 40px; background: linear-gradient(to right, #3a3a50, #2a2a3a); border-radius: 4px; }
+
+  .watch-screen {
+    background: #13131f;
+    border-radius: 52px;
+    overflow: hidden;
+    position: relative;
+    height: 360px;
+    box-shadow: inset 0 2px 20px rgba(0,0,0,0.6);
+  }
+  .screen { position: absolute; inset: 0; padding: 14px 16px; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: opacity 0.4s; z-index: 1; }
+  .screen.active { opacity: 1; pointer-events: auto; z-index: 2; }
+
+  .time-display { text-align: center; margin-top: 2px; }
+  .time { font-size: 34px; font-weight: 200; color: #e8e8f0; letter-spacing: 2px; }
+  .date { font-size: 11px; color: #9090aa; margin-top: 4px; }
+
+  .hr-ring-wrap { position: relative; width: 100px; height: 100px; margin: 4px auto; }
+  .hr-ring-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .hr-ring-track { fill: none; stroke: #1e1e30; stroke-width: 7; }
+  .hr-ring-fill { fill: none; stroke: #4caf50; stroke-width: 7; stroke-linecap: round; stroke-dasharray: 314; stroke-dashoffset: 314; transition: stroke-dashoffset 1s, stroke 0.5s; }
+
+  .hr-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .hr-icon { font-size: 18px; }
+  .hr-value { font-size: 24px; font-weight: 300; color: #e8e8f0; }
+  .hr-unit { font-size: 9px; color: #9090aa; }
+
+  .quick-actions { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
+  .qa-btn { background: #1c1c2e; border: 1px solid #2a2a3a; border-radius: 14px; padding: 8px 12px; color: #e8e8f0; font-size: 11px; font-family: inherit; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .qa-btn:active { background: #242438; }
+
+  .mood-bar { background: #1c1c2e; border-radius: 20px; padding: 8px 14px; display: flex; align-items: center; gap: 10px; margin-top: 6px; cursor: pointer; }
+  .mood-text { font-size: 11px; color: #e8e8f0; flex: 1; }
+  .mood-arrow { color: #9090aa; font-size: 16px; }
+
+  .viz-style-toggle { display: flex; gap: 8px; margin-top: 6px; justify-content: center; }
+  .viz-style-btn { padding: 5px 10px; border-radius: 12px; border: 1px solid #2a2a3a; background: #1c1c2e; color: #9090aa; font-size: 10px; font-family: inherit; cursor: pointer; }
+  .viz-style-btn.active { border-color: #7c6cf8; color: #7c6cf8; }
+
+  .bottom-nav { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
+  .nav-dot { width: 6px; height: 6px; border-radius: 50%; background: #3a3a50; cursor: pointer; }
+  .nav-dot.active { background: #7c6cf8; width: 20px; border-radius: 3px; }
+
+  .demo-console { margin-top: 24px; background: #13131f; border-radius: 16px; padding: 16px 20px; width: 320px; border: 1px solid #2a2a3a; }
+  .console-title { font-size: 11px; color: #9090aa; letter-spacing: 2px; margin-bottom: 12px; }
+  .console-btn { padding: 10px 14px; border-radius: 12px; border: 1px solid #2a2a3a; background: #1c1c2e; color: #e8e8f0; font-size: 12px; font-family: inherit; cursor: pointer; width: 100%; text-align: left; margin-bottom: 6px; }
+  .console-btn:active { background: #242438; }
+
+  /* 通知条 */
+  .notification-strip { position: absolute; top: 0; left: 0; right: 0; padding: 8px 16px 20px; font-size: 10px; color: white; text-align: center; opacity: 0; pointer-events: none; z-index: 30; transition: opacity 0.4s; }
+  .notification-strip.show { opacity: 1; }
+  .notification-strip.good { background: linear-gradient(180deg, rgba(76,175,80,0.65), transparent); }
+  .notification-strip.high { background: linear-gradient(180deg, rgba(77,208,225,0.65), transparent); }
+  .notification-strip.low { background: linear-gradient(180deg, rgba(255,183,77,0.65), transparent); }
+  .notification-strip.crisis { background: linear-gradient(180deg, rgba(77,208,225,0.65), transparent); }
+
+  /* 音乐屏 */
+  #screen-music { gap: 8px; }
+  .music-cover { width: 64px; height: 64px; border-radius: 16px; background: linear-gradient(135deg, #7c6cf8, #f06292); display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto; flex-shrink: 0; }
+  .music-title { font-size: 13px; color: #e8e8f0; text-align: center; font-weight: 500; }
+  .music-artist { font-size: 10px; color: #9090aa; text-align: center; }
+  .progress-bar { height: 3px; background: #1e1e30; border-radius: 2px; margin: 4px 0; cursor: pointer; }
+  .progress-fill { height: 100%; background: #7c6cf8; border-radius: 2px; width: 0%; transition: width 1s linear; }
+  .progress-time { display: flex; justify-content: space-between; font-size: 9px; color: #9090aa; }
+  .music-controls { display: flex; gap: 12px; justify-content: center; align-items: center; }
+  .mc-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: #1c1c2e; color: #e8e8f0; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .mc-btn.play-btn { width: 44px; height: 44px; background: linear-gradient(135deg, #7c6cf8, #f06292); font-size: 16px; }
+  .music-viz-canvas { width: 100%; height: 50px; border-radius: 8px; background: #1c1c2e; flex-shrink: 0; }
+  .viz-selector { display: flex; gap: 6px; justify-content: center; }
+  .viz-mode-dot { width: 10px; height: 10px; border-radius: 50%; cursor: pointer; opacity: 0.4; transition: opacity 0.2s; }
+  .viz-mode-dot.active { opacity: 1; transform: scale(1.2); }
+
+  /* 呼吸屏 */
+  #screen-breathe { align-items: center; justify-content: center; }
+  .breathe-circle { width: 100px; height: 100px; border-radius: 50%; background: radial-gradient(circle, rgba(124,108,248,0.3), transparent); border: 2px solid #7c6cf8; display: flex; align-items: center; justify-content: center; font-size: 13px; color: #e8e8f0; transition: transform 4s ease-in-out, opacity 4s; }
+  .breathe-guide { font-size: 11px; color: #9090aa; margin-top: 16px; text-align: center; }
+
+  /* 对话屏 */
+  #screen-chat { gap: 6px; }
+  .chat-back-btn { width: 28px; height: 28px; border-radius: 50%; border: 1px solid #3a3a50; background: #1c1c2e; color: #e8e8f0; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; line-height: 1; }
+  .chat-back-btn:active { background: #242438; }
+  .music-home-btn { width: 28px; height: 28px; border-radius: 50%; border: 1px solid #3a3a50; background: #1c1c2e; color: #e8e8f0; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; line-height: 1; }
+  .music-home-btn:active { background: #242438; }
+  .chat-messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+  .chat-msg { padding: 7px 10px; border-radius: 10px; font-size: 11px; max-width: 85%; word-break: break-all; }
+  .chat-msg.ai { background: #1c1c2e; color: #e8e8f0; align-self: flex-start; }
+  .chat-msg.me { background: #2a2040; color: #d0c0ff; align-self: flex-end; }
+  .chat-input-row { display: flex; gap: 6px; }
+  .chat-input { flex: 1; background: #1c1c2e; border: 1px solid #2a2a3a; border-radius: 10px; color: #e8e8f0; padding: 7px 10px; font-size: 11px; font-family: inherit; outline: none; }
+  .chat-send-btn { padding: 7px 14px; border-radius: 10px; border: none; background: #7c6cf8; color: white; font-size: 11px; cursor: pointer; flex-shrink: 0; }
+
+  /* 情绪屏 */
+  #screen-emotion { gap: 8px; }
+  .emotion-hr { font-size: 36px; font-weight: 200; color: #e8e8f0; text-align: center; }
+  .emotion-mood { font-size: 12px; color: #9090aa; text-align: center; }
+  .ecg-canvas { width: 100%; height: 60px; background: #1c1c2e; border-radius: 8px; flex-shrink: 0; }
+
+  /* 历史屏 */
+  #screen-history { gap: 8px; }
+  .history-chart { flex: 1; background: #1c1c2e; border-radius: 12px; padding: 10px; }
+
+  /* 紧急联系人屏 */
+  #screen-emergency { gap: 8px; }
+  .contact-card { background: #1c1c2e; border-radius: 12px; padding: 10px; display: flex; align-items: center; gap: 8px; }
+  .contact-name { font-size: 12px; color: #e8e8f0; font-weight: 500; }
+  .contact-phone { font-size: 10px; color: #7c6cf8; }
+
+  /* 弹窗 */
+  .alert-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+  .alert-overlay.show { opacity: 1; pointer-events: auto; }
+  .alert-card { background: #1e1e30; border-radius: 20px; padding: 24px 20px; width: 260px; text-align: center; }
+  .alert-btn { padding: 10px; border-radius: 12px; border: none; font-size: 13px; font-family: inherit; cursor: pointer; width: 100%; margin-top: 8px; }
+  .alert-btn.primary { background: linear-gradient(135deg, #7c6cf8, #f06292); color: white; }
+  .alert-btn.secondary { background: #1c1c2e; color: #9090aa; }
+  /* ===== QQ音乐 H5 播放器 ===== */
+  #qq-music-overlay {
+    position: fixed; inset: 0; z-index: 200; display: none;
+    background: linear-gradient(170deg, #1a1a2e 0%, #0f0f1a 50%, #0a0a12 100%);
+    flex-direction: column; align-items: center; color: #fff;
+    font-family: -apple-system, 'PingFang SC', sans-serif;
+  }
+  #qq-music-overlay.show { display: flex; }
+  .qq-top-bar { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; flex-shrink: 0; }
+  .qq-top-btn { width: 32px; height: 32px; border-radius: 50%; border: none; background: rgba(255,255,255,0.08); color: #fff; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .qq-top-title { font-size: 13px; opacity: 0.7; }
+  .qq-album-area { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+  .qq-album-disc {
+    width: 240px; height: 240px; border-radius: 50%; position: relative;
+    background: radial-gradient(circle, #333 30%, #1a1a1a 60%, #111 80%);
+    box-shadow: 0 0 0 8px rgba(255,255,255,0.05), 0 20px 60px rgba(0,0,0,0.5);
+    animation: qqSpin 8s linear infinite; animation-play-state: paused;
+  }
+  .qq-album-disc.playing { animation-play-state: running; }
+  @keyframes qqSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .qq-album-inner {
+    position: absolute; inset: 30%; border-radius: 50%;
+    background: radial-gradient(circle, #4fc3f7, #0288d1);
+    display: flex; align-items: center; justify-content: center; font-size: 48px;
+  }
+  .qq-album-hole {
+    width: 20px; height: 20px; border-radius: 50%; background: #0a0a12;
+  }
+  .qq-song-info { text-align: center; padding: 16px; flex-shrink: 0; }
+  .qq-song-name { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+  .qq-song-artist { font-size: 13px; opacity: 0.6; }
+  .qq-bt-status {
+    font-size: 10px; padding: 3px 8px; border-radius: 8px;
+    background: rgba(76,175,80,0.2); color: #4caf50; display: inline-block; margin-top: 6px;
+  }
+  .qq-bt-status.disconnected { background: rgba(244,67,54,0.2); color: #f44336; }
+  .qq-progress-area { width: 100%; padding: 0 24px; flex-shrink: 0; }
+  .qq-progress-bar { width: 100%; height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; cursor: pointer; position: relative; }
+  .qq-progress-fill { height: 100%; background: #4fc3f7; border-radius: 2px; width: 0%; transition: width 1s linear; }
+  .qq-progress-dot { width: 10px; height: 10px; border-radius: 50%; background: #4fc3f7; position: absolute; top: 50%; transform: translate(-50%, -50%); left: 0%; box-shadow: 0 0 6px rgba(79,195,247,0.5); }
+  .qq-progress-time { display: flex; justify-content: space-between; font-size: 11px; opacity: 0.5; margin-top: 6px; }
+  .qq-controls { display: flex; align-items: center; justify-content: center; gap: 24px; padding: 20px; flex-shrink: 0; }
+  .qq-ctrl-btn { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; opacity: 0.8; }
+  .qq-ctrl-btn:active { opacity: 1; }
+  .qq-play-btn {
+    width: 56px; height: 56px; border-radius: 50%; border: none;
+    background: linear-gradient(135deg, #4fc3f7, #0288d1); color: #fff;
+    font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 20px rgba(79,195,247,0.4);
+  }
+  .qq-viz-area { width: 100%; flex: 1; position: relative; overflow: hidden; min-height: 120px; }
+  .qq-viz-canvas { width: 100%; height: 100%; }
+  .qq-bt-panel {
+    width: 100%; padding: 12px 24px 24px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+  }
+  .qq-bt-connect-btn {
+    padding: 8px 20px; border-radius: 20px; border: 1px solid rgba(79,195,247,0.4);
+    background: rgba(79,195,247,0.1); color: #4fc3f7; font-size: 12px;
+    cursor: pointer; font-family: inherit;
+  }
+  .qq-bt-connect-btn:active { background: rgba(79,195,247,0.25); }
+  .qq-watch-preview {
+    padding: 8px 16px; border-radius: 20px; border: 1px solid rgba(124,108,248,0.4);
+    background: rgba(124,108,248,0.1); color: #7c6cf8; font-size: 12px;
+    text-decoration: none; font-family: inherit;
+  }
+</style>
+</head>
+<body>
+
+<div class="app-title">心守 · HeartGuard</div>
+
+<div class="watch-shell">
+  <div class="crown"></div>
+  <div class="notification-strip" id="notification-strip"></div>
+
+  <div class="watch-screen">
+    <!-- 循证可视化背景层（Heartscape & Heart Garden）- 全局可见 -->
+    <canvas id="heartscape-canvas" width="320" height="360" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.55;"></canvas>
+    <canvas id="garden-canvas" width="320" height="360" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.55;display:none;"></canvas>
+
+    <!-- 主表盘 -->
+    <div class="screen active" id="screen-home">
+      <!-- 可视化画布已移至 watch-screen 级别，全局可见 -->
+
+      <div class="time-display">
+        <div class="time" id="clock-time">--:--</div>
+        <div class="date" id="clock-date">...</div>
+      </div>
+      <div class="hr-ring-wrap">
+        <svg viewBox="0 0 110 110"><circle class="hr-ring-track" cx="55" cy="55" r="50"/><circle class="hr-ring-fill" id="hr-ring" cx="55" cy="55" r="50"/></svg>
+        <div class="hr-center"><div class="hr-icon">❤️</div><div class="hr-value" id="hr-value">72</div><div class="hr-unit">BPM</div></div>
+      </div>
+      <div class="quick-actions">
+        <button class="qa-btn" onclick="gotoScreen('breathe')"><div>🧘</div><div>呼吸</div></button>
+        <button class="qa-btn" onclick="gotoScreen('music')"><div>🎵</div><div>音乐</div></button>
+        <button class="qa-btn" onclick="gotoScreen('chat')"><div>💬</div><div>对话</div></button>
+      </div>
+      <div class="mood-bar" onclick="gotoScreen('emotion')">
+        <div class="mood-text" id="mood-text">情绪状态良好 · 点击查看详情</div>
+        <div class="mood-arrow">›</div>
+      </div>
+      <div class="viz-style-toggle">
+        <button class="viz-style-btn active" onclick="setVizStyle('heartscape',this)">❤️ 心景</button>
+        <button class="viz-style-btn" onclick="setVizStyle('garden',this)">🌿 花园</button>
+      </div>
+    </div>
+
+    <!-- 音乐屏 -->
+    <div class="screen" id="screen-music">
+      <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+        <button class="music-home-btn" onclick="gotoScreen('home')" title="返回主页">←</button>
+        <div style="font-size:13px; color:#e8e8f0; text-align:center; flex:1;">🎵 音乐疗愈</div>
+        <button class="music-home-btn" onclick="openQQMusic()" title="QQ音乐" style="font-size:13px;">🎶</button>
+      </div>
+      <div class="music-cover" id="music-cover">🎵</div>
+      <div class="music-title" id="music-title">未播放</div>
+      <div class="music-artist" id="music-artist">选择一首歌开始</div>
+      <div class="progress-bar" id="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="progress-time">
+        <span id="progress-cur">0:00</span>
+        <span id="progress-total">0:00</span>
+      </div>
+      <div class="music-controls">
+        <button class="mc-btn" onclick="prevSong()">⏮</button>
+        <button class="mc-btn play-btn" id="play-btn" onclick="togglePlay()">▶</button>
+        <button class="mc-btn" onclick="nextSong()">⏭</button>
+      </div>
+      <canvas class="music-viz-canvas" id="viz-canvas" width="280" height="50"></canvas>
+      <div class="viz-selector" id="viz-selector"></div>
+    </div>
+
+    <!-- 呼吸屏 -->
+    <div class="screen" id="screen-breathe">
+      <div style="text-align:center; color:#e8e8f0; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%;">
+        <div class="breathe-circle" id="breathe-circle">呼吸</div>
+        <div class="breathe-guide" id="breathe-guide">点击开始呼吸训练</div>
+        <button onclick="toggleBreathe()" style="margin-top:20px; padding:10px 24px; border-radius:14px; border:none; background:#7c6cf8; color:white; font-size:13px; cursor:pointer; font-family:inherit;">开始</button>
+      </div>
+    </div>
+
+    <!-- 对话屏 -->
+    <div class="screen" id="screen-chat">
+      <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+        <button class="chat-back-btn" onclick="gotoScreen('music')" title="返回音乐">←</button>
+        <div style="font-size:13px; color:#e8e8f0; text-align:center; flex:1;">💬 AI 情绪陪伴</div>
+      </div>
+      <div class="chat-messages" id="chat-messages"></div>
+      <div class="chat-input-row">
+        <input class="chat-input" id="chat-input" placeholder="说点什么..." onkeydown="if(event.key==='Enter')sendMsg()"/>
+        <button class="chat-send-btn" onclick="sendMsg()">发送</button>
+      </div>
+    </div>
+
+    <!-- 情绪屏 -->
+    <div class="screen" id="screen-emotion">
+      <div class="emotion-hr" id="emotion-hr">72 BPM</div>
+      <div class="emotion-mood" id="emotion-mood">情绪状态良好</div>
+      <canvas class="ecg-canvas" id="ecg-canvas" width="280" height="60"></canvas>
+      <div id="emotion-detail" style="font-size:10px; color:#9090aa; flex:1; overflow-y:auto;"></div>
+    </div>
+
+    <!-- 历史屏 -->
+    <div class="screen" id="screen-history">
+      <div style="font-size:13px; color:#e8e8f0; text-align:center; flex-shrink:0;">📊 情绪历史</div>
+      <div class="history-chart" id="history-chart"><div style="font-size:11px; color:#9090aa; text-align:center; padding-top:40px;">暂无历史数据<br>使用一段时间后会自动记录</div></div>
+    </div>
+
+    <!-- 紧急联系人屏 -->
+    <div class="screen" id="screen-emergency">
+      <div style="font-size:13px; color:#e8e8f0; text-align:center; flex-shrink:0;">🆘 紧急联系人</div>
+      <div class="contact-card">
+        <div style="font-size:20px;">👩</div>
+        <div>
+          <div class="contact-name">妈妈</div>
+          <div class="contact-phone">📞 138****1234</div>
+        </div>
+      </div>
+      <div class="contact-card">
+        <div style="font-size:20px;">👨</div>
+        <div>
+          <div class="contact-name">爸爸</div>
+          <div class="contact-phone">📞 139****5678</div>
+        </div>
+      </div>
+      <button onclick="showAlert()" style="margin-top:8px; padding:10px; border-radius:12px; border:1px solid #f44336; background:rgba(244,67,54,0.1); color:#f44336; font-size:12px; cursor:pointer; font-family:inherit;">🆘 发送紧急求助</button>
+    </div>
+
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-dot active" onclick="gotoScreen('home')"></div>
+    <div class="nav-dot" onclick="gotoScreen('music')"></div>
+    <div class="nav-dot" onclick="gotoScreen('breathe')"></div>
+    <div class="nav-dot" onclick="gotoScreen('chat')"></div>
+    <div class="nav-dot" onclick="gotoScreen('history')"></div>
+    <div class="nav-dot" onclick="gotoScreen('emotion')"></div>
+    <div class="nav-dot" onclick="gotoScreen('emergency')"></div>
+  </div>
+</div>
+
+<div class="demo-console">
+  <div class="console-title">演示控制台</div>
+  <button class="console-btn" onclick="simulateGood()">💚 心率良好（72 BPM）</button>
+  <button class="console-btn" onclick="simulateHighHR()">💙 心率偏高（105 BPM）</button>
+  <button class="console-btn" onclick="simulateLowHR()">💛 心率偏低（48 BPM）</button>
+  <button class="console-btn" onclick="simulateCrisis()">🆘 情绪危机（38 BPM）</button>
+  <button class="console-btn" onclick="proactiveAI()">🤖 触发AI主动对话</button>
+</div>
+
+<!-- 弹窗 -->
+<div class="alert-overlay" id="alert-overlay">
+  <div class="alert-card">
+    <div id="alert-msg" style="font-size:13px; color:#e8e8f0; margin-bottom:16px;"></div>
+    <button class="alert-btn primary" id="alert-ok">好的</button>
+    <button class="alert-btn secondary" id="alert-cancel">取消</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ===== 状态 =====
+var state = {
+  currentScreen: 'home',
+  heartRate: 72,
+  hrTarget: 72,
+  moodScore: 70,
+  currentMode: 'good',
+  isPlaying: false,
+  currentSongIdx: 0,
+  progressSec: 0,
+  breatheRunning: false,
+  breatheRound: 0,
+  vizStyle: 'heartscape'
+};
+
+// ===== 歌库（ID 已全面核实 + 代理流传输）=====
+var songLibrary = {
+  good: [
+    { name: '七月上', artist: 'Jam', id: 31445554 },
+    { name: '起风了', artist: '买辣椒也用券', id: 1330348068 },
+    { name: '海阔天空', artist: 'Beyond', id: 346089 }
+  ],
+  high: [
+    { name: '海阔天空', artist: 'Beyond', id: 346089 },
+    { name: '七月上', artist: 'Jam', id: 31445554 },
+    { name: '为了你 为了我', artist: 'Beyond', id: 346090 }
+  ],
+  low: [
+    { name: '起风了', artist: '买辣椒也用券', id: 1330348068 },
+    { name: '仓央嘉措情歌', artist: '前冲', id: 421934258 },
+    { name: '有多少爱可以重来', artist: '周艳', id: 340160 }
+  ],
+  crisis: [
+    { name: '海阔天空', artist: 'Beyond', id: 346089 },
+    { name: '有多少爱可以重来', artist: '周艳', id: 340160 },
+    { name: '为了你 为了我', artist: 'Beyond', id: 346090 }
+  ]
+};
+
+function getSongUrl(id) {
+  return 'https://music.163.com/song/media/outer/url?id=' + id + '.mp3';
+}
+
+// ===== 增强场景可视化系统（4场景 × 2模式）=====
+// 场景设计基于 11 篇循证研究论文 + 用户提供的场景提示词
+var heartscapePhase = 0;
+var gardenPhase = 0;
+var particles = [];
+var MAX_P = 50;
+
+// 粒子系统
+function spawnParticle(x, y, vx, vy, size, color, life) {
+  return { x: x || Math.random() * 320, y: y || Math.random() * 360, vx: vx || 0, vy: vy || 0, size: size || 2, color: color || '#fff', life: life || 1, maxLife: life || 1 };
+}
+function initSceneParticles(mode) {
+  particles = [];
+  var W = 320, H = 360;
+  var cfg = {
+    good:   { n: 35, colors: ['#c8e6c9','#fff9c4','#a5d6a7','#ffe082','#fff176','#e8f5e9'], vRange: 0.2, size: [1,4], dir: -1 },
+    high:   { n: 25, colors: ['#b3e5fc','#e1f5fe','#81d4fa','#b2dfdb','#e0f7fa','#4fc3f7'], vRange: 0.15, size: [1,3.5], dir: -1 },
+    low:    { n: 40, colors: ['#ffe082','#ffcc80','#ffab40','#fff176','#ffb74d','#ffd54f'], vRange: 0.3, size: [1.5,5], dir: -1 },
+    crisis: { n: 20, colors: ['#bbdefb','#fff9c4','#e1bee7','#ffcc80','#b3e5fc','#ffe082'], vRange: 0.1, size: [1,3], dir: -1 }
+  };
+  var c = cfg[mode] || cfg.good;
+  for (var i = 0; i < c.n; i++) {
+    var p = spawnParticle();
+    p.vx = (Math.random() - 0.5) * c.vRange;
+    p.vy = (Math.random() * 0.3 + 0.05) * c.dir;
+    p.size = c.size[0] + Math.random() * (c.size[1] - c.size[0]);
+    p.color = c.colors[Math.floor(Math.random() * c.colors.length)];
+    p.opacityVar = 0.3 + Math.random() * 0.5;
+    particles.push(p);
+  }
+}
+
+function updateParticles(mode) {
+  var W = 320, H = 360;
+  var cfg = {
+    good:   { vRange: 0.2, dir: -1 },
+    high:   { vRange: 0.15, dir: -1 },
+    low:    { vRange: 0.3, dir: -1 },
+    crisis: { vRange: 0.1, dir: -1 }
+  };
+  var c = cfg[mode] || cfg.good;
+  for (var i = 0; i < particles.length; i++) {
+    var p = particles[i];
+    p.x += p.vx + Math.sin(heartscapePhase * 2 + i) * 0.15;
+    p.y += p.vy;
+    p.life -= 0.0008;
+    if (p.y < -10 || p.life <= 0) {
+      p.y = H + 10;
+      p.x = Math.random() * W;
+      p.life = 1;
+      p.vx = (Math.random() - 0.5) * c.vRange;
+      p.vy = (Math.random() * 0.3 + 0.05) * c.dir;
+    }
+  }
+}
+
+// ===== 场景背景渐变 =====
+function drawSceneBg(ctx, W, H, mode) {
+  var grad;
+  switch(mode) {
+    case 'good':
+      grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, 'rgba(200,230,201,0.13)');
+      grad.addColorStop(0.4, 'rgba(255,249,196,0.10)');
+      grad.addColorStop(1, 'rgba(165,214,167,0.08)');
+      break;
+    case 'high':
+      grad = ctx.createLinearGradient(0, 0, W, H);
+      grad.addColorStop(0, 'rgba(255,183,77,0.06)');
+      grad.addColorStop(0.3, 'rgba(129,212,250,0.14)');
+      grad.addColorStop(0.7, 'rgba(38,166,218,0.12)');
+      grad.addColorStop(1, 'rgba(13,71,161,0.10)');
+      break;
+    case 'low':
+      grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, 'rgba(255,224,130,0.18)');
+      grad.addColorStop(0.5, 'rgba(255,183,77,0.15)');
+      grad.addColorStop(1, 'rgba(255,152,0,0.10)');
+      break;
+    case 'crisis':
+      grad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W*0.9);
+      grad.addColorStop(0, 'rgba(255,224,130,0.14)');
+      grad.addColorStop(0.5, 'rgba(187,222,251,0.10)');
+      grad.addColorStop(1, 'rgba(129,212,250,0.06)');
+      break;
+  }
+  if (grad) { ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H); }
+}
+
+// ==================== HEARTSCAPE 场景 ====================
+
+// 场景1：心率良好 — 阳光光斑 + 溪流 + 草原 + 柔和粒子
+function drawHeartGood(ctx, W, H) {
+  var t = heartscapePhase;
+  // 光斑（阳光穿过树叶）
+  for (var i = 0; i < 8; i++) {
+    var sx = W * 0.15 + (i % 4) * W * 0.23 + Math.sin(t * 0.4 + i) * 8;
+    var sy = H * 0.05 + Math.floor(i / 4) * H * 0.15 + Math.cos(t * 0.35 + i) * 5;
+    var sr = 3 + Math.sin(t * 1.2 + i) * 2;
+    var sg = ctx.createRadialGradient(sx, sy, 0, sx, sy, sr * 1.5);
+    sg.addColorStop(0, 'rgba(255,249,196,0.6)');
+    sg.addColorStop(1, 'rgba(200,230,201,0)');
+    ctx.fillStyle = sg; ctx.fillRect(sx - sr * 2, sy - sr * 2, sr * 4, sr * 4);
+  }
+  // 溪流（底部流动线条）
+  for (var j = 0; j < 5; j++) {
+    ctx.beginPath();
+    var by = H * 0.78 + j * 8;
+    for (var x = 0; x < W; x += 4) {
+      var yy = by + Math.sin(x * 0.04 + t * 1.5 + j * 0.7) * 3;
+      if (x === 0) ctx.moveTo(x, yy); else ctx.lineTo(x, yy);
+    }
+    ctx.strokeStyle = 'rgba(165,214,167,' + (0.22 - j * 0.04) + ')';
+    ctx.lineWidth = 1.2; ctx.stroke();
+  }
+  // 粒子
+  for (var k = 0; k < particles.length; k++) {
+    var p = particles[k];
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fillStyle = p.color; ctx.globalAlpha = p.opacityVar * p.life; ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+// 场景2：心率偏高 — 呼吸引导圆 + 海浪 + 花瓣飘落 + 冷蓝渐变
+function drawHeartHigh(ctx, W, H) {
+  var t = heartscapePhase;
+  var breatheT = Math.sin(t * 0.6) * 0.5 + 0.5; // 0-1 呼吸周期
+  // 呼吸引导圆（扩张/收缩）
+  for (var i = 0; i < 3; i++) {
+    var br = (25 + i * 18) + breatheT * 12;
+    ctx.beginPath(); ctx.arc(W/2, H*0.42, br, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(129,212,250,' + (0.28 - i * 0.08) + ')';
+    ctx.lineWidth = 1; ctx.stroke();
+  }
+  // 海浪（底部起伏）
+  for (var j = 0; j < 4; j++) {
+    ctx.beginPath();
+    var wy = H * 0.72 + j * 10;
+    for (var x = 0; x < W; x += 3) {
+      var yy = wy + Math.sin(x * 0.03 + t * 1.2 + j * 0.8) * (4 + j * 2);
+      if (x === 0) ctx.moveTo(x, yy); else ctx.lineTo(x, yy);
+    }
+    ctx.strokeStyle = 'rgba(129,212,250,' + (0.3 - j * 0.07) + ')';
+    ctx.lineWidth = 1; ctx.stroke();
+  }
+  // 飘落花瓣
+  for (var k = 0; k < particles.length; k++) {
+    var p = particles[k];
+    p.vy = -0.08 - Math.random() * 0.02; // 慢速飘落
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+    ctx.fillStyle = p.color; ctx.globalAlpha = p.opacityVar * p.life * 0.7; ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+// 场景3：心率偏低 — 金色光斑 + 花海 + 暖色调
+function drawHeartLow(ctx, W, H) {
+  var t = heartscapePhase;
+  // 金色光斑（多处大光斑）
+  for (var i = 0; i < 6; i++) {
+    var gx = W * 0.1 + (i % 3) * W * 0.4 + Math.sin(t * 0.5 + i * 1.3) * 12;
+    var gy = H * 0.08 + Math.floor(i / 3) * H * 0.35 + Math.cos(t * 0.45 + i) * 8;
+    var gr = 8 + Math.sin(t * 0.8 + i) * 4;
+    var gg = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr * 2);
+    gg.addColorStop(0, 'rgba(255,224,130,0.7)');
+    gg.addColorStop(0.5, 'rgba(255,183,77,0.3)');
+    gg.addColorStop(1, 'rgba(255,152,0,0)');
+    ctx.fillStyle = gg; ctx.fillRect(gx - gr * 2, gy - gr * 2, gr * 4, gr * 4);
+  }
+  // 花粒子（飘落花瓣，节奏稍快）
+  for (var k = 0; k < particles.length; k++) {
+    var p = particles[k];
+    p.vy = -0.12 - Math.random() * 0.03; // 比偏高稍快
+    p.size = 1.5 + Math.random() * 3.5;
+    ctx.beginPath();
+    // 椭圆花瓣
+    ctx.ellipse(p.x, p.y, p.size * 1.5, p.size * 0.5, Math.sin(t * 2 + k) * 0.5, 0, Math.PI * 2);
+    ctx.fillStyle = p.color; ctx.globalAlpha = p.opacityVar * p.life; ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+// 场景4：危机 — 呼吸波纹 + 光隧道 + 安全感 + "深呼吸"
+function drawHeartCrisis(ctx, W, H) {
+  var t = heartscapePhase;
+  var breatheT = Math.sin(t * 0.35) * 0.5 + 0.5; // 更慢的呼吸周期
+  // 光隧道（同心圆从中心扩散）
+  for (var i = 0; i < 6; i++) {
+    var tr = 12 + i * 22 + breatheT * 8;
+    ctx.beginPath(); ctx.arc(W/2, H*0.4, tr, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(255,224,130,' + (0.22 - i * 0.035) + ')';
+    ctx.lineWidth = 0.8; ctx.stroke();
+  }
+  // 呼吸波纹（水平扩散）
+  for (var j = 0; j < 3; j++) {
+    ctx.beginPath();
+    var ry = H * 0.25 + j * 25;
+    for (var x = 0; x < W; x += 2) {
+      var yy = ry + Math.sin(x * 0.025 + t * 0.8 + j * 1.5) * (3 + j);
+      if (x === 0) ctx.moveTo(x, yy); else ctx.lineTo(x, yy);
+    }
+    ctx.strokeStyle = 'rgba(187,222,251,' + (0.3 - j * 0.08) + ')';
+    ctx.lineWidth = 1; ctx.stroke();
+  }
+  // 文字 "深呼吸"
+  ctx.font = '13px "PingFang SC", sans-serif';
+  ctx.fillStyle = 'rgba(255,249,196,' + (0.5 + breatheT * 0.2) + ')';
+  ctx.textAlign = 'center';
+  ctx.fillText('深呼吸，你是安全的', W/2, H*0.58);
+  // 粒子（极慢）
+  for (var k = 0; k < particles.length; k++) {
+    var p = particles[k];
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+    ctx.fillStyle = p.color; ctx.globalAlpha = p.opacityVar * p.life * 0.5; ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+// ==================== HEART GARDEN 场景 ====================
+
+// 场景1：花园-良好 — 丰饶花园 + 阳光 + 蝴蝶 + 青草
+function drawGardenGood(ctx, W, H) {
+  var t = gardenPhase;
+  // 天空渐变
+  var sky = ctx.createLinearGradient(0, 0, 0, H*0.5);
+  sky.addColorStop(0, 'rgba(200,230,255,0.2)');
+  sky.addColorStop(1, 'rgba(200,230,255,0)');
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H*0.5);
+  // 草地
+  var grass = ctx.createLinearGradient(0, H*0.55, 0, H);
+  grass.addColorStop(0, 'rgba(165,214,167,0.3)');
+  grass.addColorStop(1, 'rgba(76,175,80,0.15)');
+  ctx.fillStyle = grass; ctx.fillRect(0, H*0.55, W, H*0.45);
+  // 太阳
+  var sx = W*0.75, sy = H*0.14;
+  var sg = ctx.createRadialGradient(sx, sy, 0, sx, sy, 40);
+  sg.addColorStop(0, 'rgba(255,249,196,0.7)');
+  sg.addColorStop(0.5, 'rgba(255,224,130,0.2)');
+  sg.addColorStop(1, 'rgba(255,200,50,0)');
+  ctx.fillStyle = sg; ctx.fillRect(sx-40, sy-40, 80, 80);
+  // 5朵花
+  var flowers = [
+    { x: W*0.2, y: H*0.65, c: '#c8e6c9', s: 7 },
+    { x: W*0.45, y: H*0.67, c: '#fff9c4', s: 6 },
+    { x: W*0.7, y: H*0.63, c: '#a5d6a7', s: 7.5 },
+    { x: W*0.3, y: H*0.72, c: '#e8f5e9', s: 5 },
+    { x: W*0.6, y: H*0.7, c: '#c8e6c9', s: 6.5 }
+  ];
+  for (var i = 0; i < flowers.length; i++) {
+    var f = flowers[i];
+    drawGardenFlower(ctx, f.x + Math.sin(t*0.3 + i)*3, f.y + Math.cos(t*0.25 + i)*2, f.s, f.c);
+  }
+  // 蝴蝶 × 3
+  drawGardenButterfly(ctx, W*0.28 + Math.sin(t*0.3)*25, H*0.32 + Math.cos(t*0.35)*12, t, '#f48fb1');
+  drawGardenButterfly(ctx, W*0.65 + Math.cos(t*0.28)*20, H*0.28 + Math.sin(t*0.33)*10, t+1, '#e91e63');
+  drawGardenButterfly(ctx, W*0.5 + Math.sin(t*0.22)*18, H*0.25 + Math.cos(t*0.3)*9, t+2, '#ff80ab');
+}
+
+// 场景2：花园-偏高 — 雾中森林 + 稀疏花朵 + 冷调
+function drawGardenHigh(ctx, W, H) {
+  var t = gardenPhase;
+  // 雾感背景
+  var fog = ctx.createLinearGradient(0, 0, 0, H);
+  fog.addColorStop(0, 'rgba(179,229,252,0.15)');
+  fog.addColorStop(0.5, 'rgba(129,212,250,0.1)');
+  fog.addColorStop(1, 'rgba(38,166,218,0.08)');
+  ctx.fillStyle = fog; ctx.fillRect(0, 0, W, H);
+  // 树木（简单竖线）
+  for (var i = 0; i < 6; i++) {
+    var tx = W*0.1 + i*W*0.16;
+    ctx.beginPath(); ctx.moveTo(tx, H*0.65); ctx.lineTo(tx, H*0.85);
+    ctx.strokeStyle = 'rgba(129,212,250,0.25)'; ctx.lineWidth = 2; ctx.stroke();
+    // 树冠
+    ctx.beginPath(); ctx.arc(tx, H*0.58, 10, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(129,212,250,0.12)'; ctx.fill();
+  }
+  // 3朵花（稀疏）
+  var flowers = [
+    { x: W*0.15, y: H*0.62, c: '#b3e5fc', s: 5 },
+    { x: W*0.55, y: H*0.65, c: '#e1f5fe', s: 4.5 },
+    { x: W*0.8, y: H*0.63, c: '#81d4fa', s: 5 }
+  ];
+  for (var i = 0; i < flowers.length; i++) {
+    var f = flowers[i];
+    drawGardenFlower(ctx, f.x + Math.sin(t*0.2 + i)*2, f.y, f.s, f.c);
+  }
+  // 1只蝴蝶
+  drawGardenButterfly(ctx, W*0.35 + Math.sin(t*0.25)*15, H*0.3 + Math.cos(t*0.3)*8, t, '#81d4fa');
+  // 雾霾层
+  for (var j = 0; j < 3; j++) {
+    ctx.beginPath();
+    for (var x = 0; x < W; x += 3) {
+      var my = H*0.45 + j*15 + Math.sin(x*0.02 + t*0.5 + j)*4;
+      if (x === 0) ctx.moveTo(x, my); else ctx.lineTo(x, my);
+    }
+    ctx.strokeStyle = 'rgba(179,229,252,' + (0.15 - j*0.04) + ')';
+    ctx.lineWidth = 1.5; ctx.stroke();
+  }
+}
+
+// 场景3：花园-偏低 — 花海 + 金色光斑 + 暖色调
+function drawGardenLow(ctx, W, H) {
+  var t = gardenPhase;
+  // 暖色天空
+  var sky = ctx.createLinearGradient(0, 0, 0, H*0.45);
+  sky.addColorStop(0, 'rgba(255,224,130,0.25)');
+  sky.addColorStop(1, 'rgba(255,183,77,0.1)');
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H*0.45);
+  // 草地
+  var grass = ctx.createLinearGradient(0, H*0.5, 0, H);
+  grass.addColorStop(0, 'rgba(255,204,128,0.25)');
+  grass.addColorStop(1, 'rgba(255,152,0,0.15)');
+  ctx.fillStyle = grass; ctx.fillRect(0, H*0.5, W, H*0.5);
+  // 金色光斑
+  for (var i = 0; i < 5; i++) {
+    var gx = W*0.1 + (i%3)*W*0.35 + Math.sin(t*0.4 + i)*10;
+    var gy = H*0.1 + Math.floor(i/3)*H*0.3 + Math.cos(t*0.35 + i)*8;
+    var gg = ctx.createRadialGradient(gx, gy, 0, gx, gy, 20);
+    gg.addColorStop(0, 'rgba(255,249,196,0.6)');
+    gg.addColorStop(1, 'rgba(255,183,77,0)');
+    ctx.fillStyle = gg; ctx.fillRect(gx-20, gy-20, 40, 40);
+  }
+  // 花海（7朵）
+  for (var j = 0; j < 7; j++) {
+    var fx = W*0.07 + j*W*0.13 + Math.sin(t*0.35 + j)*4;
+    var fy = H*0.55 + (j%2)*18 + Math.cos(t*0.3 + j)*3;
+    drawGardenFlower(ctx, fx, fy, 5 + (j%3)*2, ['#ffcc80','#ffab40','#ffd54f','#ffe082'][j%4]);
+  }
+  // 蝴蝶 × 2
+  drawGardenButterfly(ctx, W*0.35 + Math.sin(t*0.35)*22, H*0.25 + Math.cos(t*0.28)*10, t, '#ff8f00');
+  drawGardenButterfly(ctx, W*0.6 + Math.cos(t*0.3)*18, H*0.22 + Math.sin(t*0.32)*8, t+1.5, '#ffb300');
+}
+
+// 场景4：花园-危机 — 温暖小屋 + 安全港湾 + 呼吸引导
+function drawGardenCrisis(ctx, W, H) {
+  var t = gardenPhase;
+  // 温暖渐变背景
+  var bg = ctx.createRadialGradient(W/2, H*0.45, 0, W/2, H*0.45, W*0.8);
+  bg.addColorStop(0, 'rgba(255,224,130,0.15)');
+  bg.addColorStop(0.6, 'rgba(187,222,251,0.08)');
+  bg.addColorStop(1, 'rgba(129,212,250,0.04)');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  // 海边小屋
+  var hx = W/2, hy = H*0.5;
+  // 屋身
+  ctx.fillStyle = 'rgba(255,224,130,0.3)'; ctx.fillRect(hx-18, hy, 36, 24);
+  // 屋顶
+  ctx.beginPath(); ctx.moveTo(hx-22, hy); ctx.lineTo(hx, hy-16); ctx.lineTo(hx+22, hy);
+  ctx.fillStyle = 'rgba(255,183,77,0.35)'; ctx.fill();
+  // 窗户（暖光）
+  ctx.fillStyle = 'rgba(255,249,196,0.6)'; ctx.fillRect(hx-6, hy+6, 12, 10);
+  // 门
+  ctx.fillStyle = 'rgba(187,222,251,0.3)'; ctx.fillRect(hx-4, hy+16, 8, 8);
+  // 烟囱
+  ctx.fillStyle = 'rgba(255,204,128,0.25)'; ctx.fillRect(hx+12, hy-18, 4, 10);
+  // 呼吸波纹围绕小屋
+  for (var i = 0; i < 4; i++) {
+    var rr = 28 + i*14 + Math.sin(t*0.4)*6;
+    ctx.beginPath(); ctx.arc(hx, hy+12, rr, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(255,224,130,' + (0.22 - i*0.05) + ')';
+    ctx.lineWidth = 0.8; ctx.stroke();
+  }
+  // 光隧道
+  for (var j = 0; j < 4; j++) {
+    var tr = 10 + j*20 + Math.sin(t*0.35)*5;
+    ctx.beginPath(); ctx.arc(W/2, H*0.38, tr, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(255,249,196,' + (0.25 - j*0.06) + ')';
+    ctx.lineWidth = 0.7; ctx.stroke();
+  }
+  // "深呼吸" 文字
+  ctx.font = '12px "PingFang SC", sans-serif';
+  ctx.fillStyle = 'rgba(255,249,196,0.65)';
+  ctx.textAlign = 'center';
+  ctx.fillText('深呼吸，你是安全的', W/2, H*0.82);
+  // 1朵小花
+  drawGardenFlower(ctx, W*0.25, H*0.62, 4, '#ffe082');
+  drawGardenFlower(ctx, W*0.75, H*0.64, 4, '#ffcc80');
+}
+
+// ===== 通用花园元素 =====
+function drawGardenFlower(ctx, x, y, s, color) {
+  // 花瓣
+  for (var p = 0; p < 5; p++) {
+    var a = (p/5)*Math.PI*2 + gardenPhase*0.05;
+    ctx.beginPath();
+    ctx.arc(x+Math.cos(a)*s, y+Math.sin(a)*s, s*0.32, 0, Math.PI*2);
+    ctx.fillStyle = color; ctx.globalAlpha = 0.65; ctx.fill();
+  }
+  // 花心
+  ctx.beginPath(); ctx.arc(x, y, s*0.18, 0, Math.PI*2);
+  ctx.fillStyle = '#ffd600'; ctx.globalAlpha = 0.7; ctx.fill();
+  ctx.globalAlpha = 1;
+  // 花茎
+  ctx.beginPath(); ctx.moveTo(x, y+s); ctx.lineTo(x, y+s+10);
+  ctx.strokeStyle = 'rgba(129,199,132,0.5)'; ctx.lineWidth = 1.3; ctx.stroke();
+}
+
+function drawGardenButterfly(ctx, x, y, t, color) {
+  var ws = 4.5 + Math.sin(t*3.5)*1.5;
+  ctx.beginPath();
+  ctx.ellipse(x-ws*0.5, y, ws*0.5, ws*0.25, Math.sin(t*3.5)*0.25, 0, Math.PI*2);
+  ctx.fillStyle = color; ctx.globalAlpha = 0.6 + Math.sin(t*3.5)*0.2; ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(x+ws*0.5, y, ws*0.5, ws*0.25, -Math.sin(t*3.5)*0.25, 0, Math.PI*2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.beginPath(); ctx.arc(x, y, 0.8, 0, Math.PI*2);
+  ctx.fillStyle = '#333'; ctx.fill();
+}
+
+// ===== 主入口 =====
+function drawHeartscapeHome() {
+  if (state.vizStyle !== 'heartscape') return;
+  var canvas = document.getElementById('heartscape-canvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  var mode = state.currentMode;
+  if (!particles.length || particles[0]._mode !== mode) { initSceneParticles(mode); if (particles.length) particles[0]._mode = mode; }
+
+  drawSceneBg(ctx, W, H, mode);
+  updateParticles(mode);
+
+  switch(mode) {
+    case 'good': drawHeartGood(ctx, W, H); break;
+    case 'high': drawHeartHigh(ctx, W, H); break;
+    case 'low': drawHeartLow(ctx, W, H); break;
+    case 'crisis': drawHeartCrisis(ctx, W, H); break;
+  }
+  heartscapePhase += 0.015;
+}
+
+function drawGardenHome() {
+  if (state.vizStyle !== 'garden') return;
+  var canvas = document.getElementById('garden-canvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  var mode = state.currentMode;
+  switch(mode) {
+    case 'good': drawGardenGood(ctx, W, H); break;
+    case 'high': drawGardenHigh(ctx, W, H); break;
+    case 'low': drawGardenLow(ctx, W, H); break;
+    case 'crisis': drawGardenCrisis(ctx, W, H); break;
+  }
+  gardenPhase += 0.012;
+}
+
+// ===== 音频引擎（HTML5 Audio 播放网易云音乐）=====
+var audioEl = null;
+
+function ensureAudio() {
+  if (!audioEl) {
+    audioEl = new Audio();
+    audioEl.preload = 'auto';
+    audioEl.addEventListener('timeupdate', function() {
+      if (audioEl.duration && isFinite(audioEl.duration)) {
+        var pct = (audioEl.currentTime / audioEl.duration) * 100;
+        document.getElementById('progress-fill').style.width = pct + '%';
+        document.getElementById('progress-cur').textContent = formatTime(audioEl.currentTime);
+        document.getElementById('progress-total').textContent = formatTime(audioEl.duration);
+      }
+      state.progressSec = audioEl.currentTime || 0;
+    });
+    audioEl.addEventListener('ended', function() { nextSong(); });
+    audioEl.addEventListener('error', function() {
+      // 歌曲加载失败，尝试下一首
+      var list = songLibrary[state.currentMode] || songLibrary.good;
+      var song = list[state.currentSongIdx % list.length];
+      showNotification('⚠️ ' + (song.name || '歌曲') + ' 加载失败，尝试下一首');
+      nextSong();
+    });
+  }
+  return audioEl;
+}
+
+function formatTime(sec) {
+  if (!sec || !isFinite(sec)) return '--:--';
+  var m = Math.floor(sec / 60);
+  var s = Math.floor(sec % 60);
+  return m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+function loadSong() {
+  var list = songLibrary[state.currentMode] || songLibrary.good;
+  var song = list[state.currentSongIdx % list.length];
+  document.getElementById('music-title').textContent = song.name;
+  document.getElementById('music-artist').textContent = song.artist;
+  document.getElementById('music-cover').textContent = '🎵';
+  document.getElementById('progress-fill').style.width = '0%';
+  document.getElementById('progress-cur').textContent = '0:00';
+  document.getElementById('progress-total').textContent = '--:--';
+  state.progressSec = 0;
+  state._songName = song.name;
+  state._songArtist = song.artist;
+
+  var a = ensureAudio();
+  a.src = getSongUrl(song.id);
+  a.load();
+}
+
+function togglePlay() {
+  var a = ensureAudio();
+  if (state.isPlaying) {
+    a.pause();
+    state.isPlaying = false;
+    document.getElementById('play-btn').textContent = '▶';
+  } else {
+    var list = songLibrary[state.currentMode] || songLibrary.good;
+    var song = list[state.currentSongIdx % list.length];
+    if (!a.src || a.src.indexOf('id=' + song.id) === -1) {
+      a.src = getSongUrl(song.id);
+    }
+    a.play().catch(function(e) {
+      showNotification('⚠️ 播放失败，请重试');
+    });
+    state.isPlaying = true;
+    document.getElementById('play-btn').textContent = '⏸';
+    document.getElementById('music-cover').textContent = '🎵';
+  }
+}
+
+function nextSong() {
+  state.currentSongIdx++;
+  var list = songLibrary[state.currentMode] || songLibrary.good;
+  var song = list[state.currentSongIdx % list.length];
+  document.getElementById('music-title').textContent = song.name;
+  document.getElementById('music-artist').textContent = song.artist;
+  state._songName = song.name;
+  state._songArtist = song.artist;
+  var a = ensureAudio();
+  a.src = getSongUrl(song.id);
+  a.load();
+  if (state.isPlaying) { a.play().catch(function(){}); }
+}
+function prevSong() {
+  state.currentSongIdx--;
+  if (state.currentSongIdx < 0) state.currentSongIdx = 0;
+  var list = songLibrary[state.currentMode] || songLibrary.good;
+  var song = list[state.currentSongIdx % list.length];
+  document.getElementById('music-title').textContent = song.name;
+  document.getElementById('music-artist').textContent = song.artist;
+  state._songName = song.name;
+  state._songArtist = song.artist;
+  var a = ensureAudio();
+  a.src = getSongUrl(song.id);
+  a.load();
+  if (state.isPlaying) { a.play().catch(function(){}); }
+}
+
+function stopAllTones() {
+  if (audioEl) { audioEl.pause(); audioEl.src = ''; }
+  state.isPlaying = false;
+  document.getElementById('play-btn').textContent = '▶';
+}
+
+// ===== 时钟 =====
+function updateClock() {
+  var n = new Date();
+  document.getElementById('clock-time').textContent =
+    String(n.getHours()).padStart(2, '0') + ':' + String(n.getMinutes()).padStart(2, '0');
+  var d = ['日','一','二','三','四','五','六'];
+  document.getElementById('clock-date').textContent =
+    (n.getMonth() + 1) + '月' + n.getDate() + '日 周' + d[n.getDay()];
+}
+
+// ===== 心率环 =====
+function updateHRRing(bpm) {
+  var pct = Math.max(0, Math.min(1, (bpm - 40) / 140));
+  var offset = 314 - pct * 314;
+  var ring = document.getElementById('hr-ring');
+  ring.style.strokeDashoffset = offset;
+  document.getElementById('hr-value').textContent = bpm;
+  if (state.currentMode === 'good') ring.style.stroke = '#4caf50';
+  else if (state.currentMode === 'high') ring.style.stroke = '#4dd0e1';
+  else if (state.currentMode === 'low') ring.style.stroke = '#ffb74d';
+  else ring.style.stroke = '#f44336';
+}
+
+// ===== 切换屏幕 =====
+var screenNames = ['home','music','breathe','chat','history','emotion','emergency'];
+function gotoScreen(name) {
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+  var target = document.getElementById('screen-' + name);
+  if (target) target.classList.add('active');
+  document.querySelectorAll('.nav-dot').forEach(function(d) { d.classList.remove('active'); });
+  var idx = screenNames.indexOf(name);
+  var dots = document.querySelectorAll('.nav-dot');
+  if (dots[idx]) dots[idx].classList.add('active');
+  state.currentScreen = name;
+  if (name === 'emotion') updateEmotionScreen();
+  if (name === 'chat' && !state._chatInited) initChat();
+}
+
+// ===== 可视化样式 =====
+function setVizStyle(style, btn) {
+  state.vizStyle = style;
+  document.querySelectorAll('.viz-style-btn').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+
+  // 控制主屏画布显示
+  var hc = document.getElementById('heartscape-canvas');
+  var gc = document.getElementById('garden-canvas');
+  if (hc) hc.style.display = style === 'heartscape' ? 'block' : 'none';
+  if (gc) gc.style.display = style === 'garden' ? 'block' : 'none';
+  
+  // 非心景/花园模式时隐藏画布
+  if (style !== 'heartscape' && style !== 'garden') {
+    if (hc) hc.style.display = 'none';
+    if (gc) gc.style.display = 'none';
+  }
+}
+
+// ===== 呼吸训练 =====
+var breatheTimer = null;
+function toggleBreathe() {
+  if (breatheTimer) {
+    clearInterval(breatheTimer);
+    breatheTimer = null;
+    document.getElementById('breathe-circle').style.transform = 'scale(1)';
+    document.getElementById('breathe-guide').textContent = '已完成 ' + state.breatheRound + ' 轮';
+    state.breatheRound = 0;
+    return;
+  }
+  state.breatheRound = 0;
+  breatheStep('inhale');
+}
+
+function breatheStep(phase) {
+  var circle = document.getElementById('breathe-circle');
+  var guide = document.getElementById('breathe-guide');
+  if (phase === 'inhale') {
+    circle.style.transform = 'scale(1.5)';
+    guide.textContent = '↑ 慢慢吸气...（4秒）';
+    breatheTimer = setTimeout(function() { breatheStep('hold'); }, 4000);
+  } else if (phase === 'hold') {
+    guide.textContent = '⏸ 屏息...（7秒）';
+    breatheTimer = setTimeout(function() { breatheStep('exhale'); }, 7000);
+  } else {
+    circle.style.transform = 'scale(1)';
+    guide.textContent = '↓ 缓缓呼气...（8秒）';
+    state.breatheRound++;
+    breatheTimer = setTimeout(function() { breatheStep('inhale'); }, 8000);
+  }
+}
+
+// ===== 对话 =====
+function initChat() {
+  var box = document.getElementById('chat-messages');
+  box.innerHTML = '<div class="chat-msg ai">你好呀！我是心守 ❤️ 有什么想聊的吗？</div>';
+  state._chatInited = true;
+}
+
+function sendMsg() {
+  var input = document.getElementById('chat-input');
+  var msg = input.value.trim();
+  if (!msg) return;
+  var box = document.getElementById('chat-messages');
+  box.innerHTML += '<div class="chat-msg me">' + escapeHtml(msg) + '</div>';
+  input.value = '';
+  setTimeout(function() {
+    var reply = getAIReply(msg);
+    box.innerHTML += '<div class="chat-msg ai">' + reply + '</div>';
+    box.scrollTop = box.scrollHeight;
+  }, 800);
+  box.scrollTop = box.scrollHeight;
+}
+
+function escapeHtml(s) {
+  var d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function getAIReply(msg) {
+  var replies = [
+    '我听到了 💜 你最近感觉怎么样？',
+    '嗯嗯，我在这里陪着你 ❤️',
+    '谢谢你跟我分享这些 🌿 要不要听首歌放松一下？',
+    '你真的很棒，愿意跟我聊这些 🌟'
+  ];
+  return replies[Math.floor(Math.random() * replies.length)];
+}
+
+// ===== 模拟心率 =====
+setInterval(function() {
+  if (state.heartRate < state.hrTarget - 1) state.heartRate++;
+  if (state.heartRate > state.hrTarget + 1) state.heartRate--;
+  updateHRRing(state.heartRate);
+  if (state.currentScreen === 'emotion') {
+    document.getElementById('emotion-hr').textContent = state.heartRate + ' BPM';
+  }
+}, 2000);
+
+// ===== 模拟场景 =====
+function simulateGood() {
+  state.currentMode = 'good';
+  state.hrTarget = 72;
+  state.currentSongIdx = 0;
+  updateMoodBar('good');
+  loadSong();
+  gotoScreen('music');
+  showNotification('💚 心率良好 · ' + (state._songName || '推荐疗愈音调'));
+  // 自动播放
+  setTimeout(function() { if (!state.isPlaying) togglePlay(); }, 600);
+  // AI 对话
+  setTimeout(function() { proactiveAI('good'); }, 2000);
+}
+function simulateHighHR() {
+  state.currentMode = 'high';
+  state.hrTarget = 105;
+  state.currentSongIdx = 0;
+  updateMoodBar('high');
+  loadSong();
+  gotoScreen('music');
+  showNotification('💙 心率偏高 · ' + (state._songName || '推荐疗愈音调'));
+  setTimeout(function() {
+    if (!state.isPlaying) togglePlay();
+  }, 600);
+  setTimeout(function() { proactiveAI('high'); }, 2000);
+}
+function simulateLowHR() {
+  state.currentMode = 'low';
+  state.hrTarget = 48;
+  state.currentSongIdx = 0;
+  updateMoodBar('low');
+  loadSong();
+  gotoScreen('music');
+  showNotification('💛 心率偏低 · ' + (state._songName || '推荐疗愈音调'));
+  setTimeout(function() {
+    if (!state.isPlaying) togglePlay();
+  }, 600);
+  setTimeout(function() { proactiveAI('low'); }, 2000);
+}
+function simulateCrisis() {
+  state.currentMode = 'crisis';
+  state.hrTarget = 38;
+  state.currentSongIdx = 0;
+  updateMoodBar('crisis');
+  loadSong();
+  gotoScreen('music');
+  showNotification('🆘 情绪危机 · ' + (state._songName || '紧急干预'));
+  showAlert('⚠️ 检测到情绪危机状态\n已通知紧急联系人\n深呼吸，你是安全的');
+  setTimeout(function() {
+    if (!state.isPlaying) togglePlay();
+  }, 600);
+  setTimeout(function() { proactiveAI('crisis'); }, 2500);
+}
+
+function updateMoodBar(mode) {
+  var txt = document.getElementById('mood-text');
+  var cfg = {
+    good:   '情绪状态良好 · 点击查看详情',
+    high:   '💙 心率偏高，注意放松',
+    low:    '⚠️ 情绪偏低，请注意休息',
+    crisis: '🆘 检测到情绪危机，需要帮助'
+  };
+  txt.textContent = cfg[mode] || '';
+  // stress-val 已移除
+
+}
+
+// ===== 通知 =====
+function showNotification(text) {
+  var strip = document.getElementById('notification-strip');
+  strip.textContent = text;
+  strip.className = 'notification-strip show ' + (state.currentMode || 'good');
+  setTimeout(function() { strip.classList.remove('show'); }, 3000);
+}
+
+// ===== 弹窗 =====
+function showAlert(msg) {
+  document.getElementById('alert-msg').textContent = msg;
+  document.getElementById('alert-overlay').classList.add('show');
+}
+document.getElementById('alert-ok').addEventListener('click', function() {
+  document.getElementById('alert-overlay').classList.remove('show');
+});
+document.getElementById('alert-cancel').addEventListener('click', function() {
+  document.getElementById('alert-overlay').classList.remove('show');
+});
+
+// ===== AI主动对话 =====
+function proactiveAI(mode) {
+  mode = mode || state.currentMode;
+  if (!state._chatInited) initChat();
+  gotoScreen('chat');
+  var messages = {
+    good:   '💚 检测到你的心率状态良好！继续保持放松的心情，来听听晨光森林的疗愈音调吧~',
+    high:   '💙 我注意到你的心率有些偏高。别担心，深呼吸——我在陪着你。试着闭上眼睛，感受节奏慢慢放缓。',
+    low:    '💛 情绪有些低迷是吗？没关系，每个人都会有这样的时刻。让我为你放一首温暖的音调，一点点把能量唤醒。',
+    crisis: '🆘 我能感觉到你正处于很困难的时刻。深呼吸——你是安全的。我在这里，不会离开。需要我帮你联系紧急联系人吗？'
+  };
+  var msg = messages[mode] || messages.good;
+  var box = document.getElementById('chat-messages');
+  box.innerHTML += '<div class="chat-msg ai">' + msg + '</div>';
+  box.scrollTop = box.scrollHeight;
+}
+
+// ===== 情绪屏 =====
+function updateEmotionScreen() {
+  document.getElementById('emotion-hr').textContent = state.heartRate + ' BPM';
+  var moodMap = { good: '情绪状态良好', high: '心率偏高·紧张', low: '情绪偏低·抑制', crisis: '情绪危机·极抑' };
+  document.getElementById('emotion-mood').textContent = moodMap[state.currentMode] || '';
+  var detail = {
+    good:   'HRV: 42ms · 正常范围\nEDA: 2.1μS · 情绪稳定\n呼吸: 16/min · 规律平稳',
+    high:   'HRV: 55ms · 偏高紧张\nEDA: 3.8μS · 情绪激动\n呼吸: 22/min · 偏快',
+    low:    'HRV: 18ms · ⚠️偏低\nEDA: 0.8μS · 情绪抑制\n呼吸: 12/min · 偏慢',
+    crisis: 'HRV: 8ms · 🔴极低\nEDA: 0.3μS · 情绪极抑\n呼吸: 9/min · 极慢'
+  };
+  document.getElementById('emotion-detail').innerText = detail[state.currentMode] || '';
+  startECG();
+}
+
+var ecgInterval = null;
+function startECG() {
+  if (ecgInterval) return;
+  var canvas = document.getElementById('ecg-canvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var x = 0;
+  ecgInterval = setInterval(function() {
+    ctx.fillStyle = 'rgba(28,28,46,0.15)';
+    ctx.fillRect(0, 0, 280, 60);
+    x = (x + 2) % 280;
+    // 简单ECG波形
+    var y = 30;
+    if (state.currentMode === 'high') y = 20 + Math.sin(x * 0.3) * 8;
+    else if (state.currentMode === 'low') y = 35 + Math.sin(x * 0.15) * 4;
+    else if (state.currentMode === 'crisis') y = 40 + Math.sin(x * 0.5) * 12;
+    else y = 28 + Math.sin(x * 0.2) * 5;
+    ctx.beginPath();
+    ctx.strokeStyle = state.currentMode === 'good' ? '#4caf50' : state.currentMode === 'high' ? '#4dd0e1' : state.currentMode === 'low' ? '#ffb74d' : '#f44336';
+    ctx.lineWidth = 1.5;
+    for (var i = 0; i < 280; i += 2) {
+      var iy = 30 + Math.sin(i * 0.2 + x) * (state.currentMode === 'crisis' ? 12 : 5);
+      if (i === 0) ctx.moveTo(i, iy);
+      else ctx.lineTo(i, iy);
+    }
+    ctx.stroke();
+  }, 100);
+}
+
+// ===== 音乐可视化 =====
+var vizCanvas, vizCtx, vizFrameId;
+var vizColors = ['#4caf50','#4dd0e1','#ffb74d','#64b5f6'];
+var vizNames = ['花园隐喻','冷色镇静','暖色唤醒','强生物反馈'];
+
+function initViz() {
+  vizCanvas = document.getElementById('viz-canvas');
+  if (!vizCanvas) return;
+  vizCtx = vizCanvas.getContext('2d');
+  buildVizSelector();
+}
+
+var currentViz = 0;
+function buildVizSelector() {
+  var s = document.getElementById('viz-selector');
+  if (!s) return;
+  s.innerHTML = '';
+  vizNames.forEach(function(name, i) {
+    var d = document.createElement('div');
+    d.className = 'viz-mode-dot' + (i === currentViz ? ' active' : '');
+    d.style.background = vizColors[i];
+    d.title = name;
+    d.addEventListener('click', function() {
+      currentViz = i;
+      document.querySelectorAll('.viz-mode-dot').forEach(function(el, idx) { el.classList.toggle('active', idx === i); });
+    });
+    s.appendChild(d);
+  });
+}
+
+function startVizLoop() {
+  if (vizFrameId) return;
+  function frame() {
+    drawViz(); // 音乐屏可视化
+    drawHeartscapeHome(); // 主屏 Heartscape
+    drawGardenHome(); // 主屏 Heart Garden
+    vizFrameId = requestAnimationFrame(frame);
+  }
+  frame();
+}
+
+function drawViz() {
+  if (!vizCtx || state.currentScreen !== 'music') return;
+  var W = 280, H = 50;
+  vizCtx.clearRect(0, 0, W, H);
+  vizCtx.fillStyle = '#1c1c2e';
+  vizCtx.fillRect(0, 0, W, H);
+  // 简单频谱条
+  for (var i = 0; i < 28; i++) {
+    var h = 5 + Math.sin(Date.now() * 0.003 + i * 0.5) * (state.isPlaying ? 15 : 5) + Math.random() * 3;
+    vizCtx.fillStyle = vizColors[currentViz];
+    vizCtx.globalAlpha = 0.5 + Math.sin(i * 0.3) * 0.3;
+    vizCtx.fillRect(i * 10 + 2, H - h, 6, h);
+  }
+  vizCtx.globalAlpha = 1;
+}
+
+// ===== QQ音乐 H5 播放器 =====
+var qqVizCanvas, qqVizCtx, qqVizFrameId;
+var qqBTConnected = false;
+
+function openQQMusic() {
+  document.getElementById('qq-music-overlay').classList.add('show');
+  // 同步当前歌曲信息
+  var list = songLibrary[state.currentMode] || songLibrary.good;
+  var song = list[state.currentSongIdx % list.length];
+  document.getElementById('qq-song-name').textContent = song.name;
+  document.getElementById('qq-song-artist').textContent = song.artist;
+  // 同步播放状态
+  var disc = document.getElementById('qq-disc');
+  var playBtn = document.getElementById('qq-play-btn');
+  if (state.isPlaying) {
+    disc.classList.add('playing');
+    playBtn.textContent = '⏸';
+  } else {
+    disc.classList.remove('playing');
+    playBtn.textContent = '▶';
+  }
+  startQQVizLoop();
+}
+
+function closeQQMusic() {
+  document.getElementById('qq-music-overlay').classList.remove('show');
+  if (qqVizFrameId) { cancelAnimationFrame(qqVizFrameId); qqVizFrameId = null; }
+}
+
+function qqTogglePlay() {
+  togglePlay(); // 复用 watch 播放逻辑
+  var disc = document.getElementById('qq-disc');
+  var playBtn = document.getElementById('qq-play-btn');
+  if (state.isPlaying) {
+    disc.classList.add('playing');
+    playBtn.textContent = '⏸';
+  } else {
+    disc.classList.remove('playing');
+    playBtn.textContent = '▶';
+  }
+}
+
+function qqNext() {
+  nextSong();
+  syncQQSongInfo();
+}
+
+function qqPrev() {
+  prevSong();
+  syncQQSongInfo();
+}
+
+function syncQQSongInfo() {
+  var list = songLibrary[state.currentMode] || songLibrary.good;
+  var song = list[state.currentSongIdx % list.length];
+  document.getElementById('qq-song-name').textContent = song.name;
+  document.getElementById('qq-song-artist').textContent = song.artist;
+}
+
+function seekQQProgress(e) {
+  if (!audioEl || !audioEl.duration) return;
+  var bar = e.currentTarget;
+  var rect = bar.getBoundingClientRect();
+  var pct = (e.clientX - rect.left) / rect.width;
+  audioEl.currentTime = pct * audioEl.duration;
+}
+
+// ===== QQ音乐可视化（复用4场景系统）=====
+function startQQVizLoop() {
+  if (qqVizFrameId) return;
+  var canvas = document.getElementById('qq-viz-canvas');
+  if (!canvas) return;
+  qqVizCanvas = canvas;
+  qqVizCtx = canvas.getContext('2d');
+  // 设置canvas尺寸
+  canvas.width = canvas.offsetWidth * 2;
+  canvas.height = canvas.offsetHeight * 2;
+  canvas.getContext('2d').scale(2, 2);
+
+  function frame() {
+    drawQQViz();
+    qqVizFrameId = requestAnimationFrame(frame);
+  }
+  frame();
+}
+
+function drawQQViz() {
+  if (!qqVizCtx) return;
+  var W = qqVizCanvas.offsetWidth;
+  var H = qqVizCanvas.offsetHeight;
+  if (!W || !H) return;
+  qqVizCtx.clearRect(0, 0, W * 2, H * 2);
+  qqVizCtx.save();
+  qqVizCtx.scale(2, 2);
+
+  var mode = state.currentMode || 'good';
+
+  // 背景渐变
+  drawSceneBg(qqVizCtx, W, H, mode);
+
+  // 根据模式画对应场景（简化版，适合横条区域）
+  switch(mode) {
+    case 'good': drawQQVizGood(qqVizCtx, W, H); break;
+    case 'high': drawQQVizHigh(qqVizCtx, W, H); break;
+    case 'low':  drawQQVizLow(qqVizCtx, W, H); break;
+    case 'crisis': drawQQVizCrisis(qqVizCtx, W, H); break;
+  }
+
+  // 底部进度小频谱
+  if (state.isPlaying) {
+    for (var i = 0; i < 40; i++) {
+      var bh = 3 + Math.sin(Date.now() * 0.004 + i * 0.4) * 8 + Math.random() * 4;
+      qqVizCtx.fillStyle = mode === 'good' ? '#4caf50' : mode === 'high' ? '#4dd0e1' : mode === 'low' ? '#ffb74d' : '#64b5f6';
+      qqVizCtx.globalAlpha = 0.4;
+      qqVizCtx.fillRect(i * (W / 40) + 1, H - bh, (W / 40) - 2, bh);
+    }
+    qqVizCtx.globalAlpha = 1;
+  }
+
+  qqVizCtx.restore();
+  heartscapePhase += 0.012;
+}
+
+// QQ可视化场景（按用户提示词实现）
+function drawQQVizGood(ctx, W, H) {
+  // 背景：浅绿到暖黄渐变（低饱和度）
+  var bg = ctx.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0, 'rgba(200,230,201,0.4)');
+  bg.addColorStop(0.5, 'rgba(220,237,200,0.3)');
+  bg.addColorStop(1, 'rgba(255,249,196,0.4)');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // 草原（底部绿色曲线，微风吹拂效果）
+  ctx.beginPath();
+  ctx.moveTo(0, H);
+  for (var x = 0; x <= W; x += 4) {
+    var y = H * 0.65 + Math.sin(x * 0.015 + heartscapePhase * 0.2) * 6 + Math.sin(x * 0.03 + heartscapePhase * 0.35) * 3;
+    ctx.lineTo(x, y);
+  }
+  ctx.lineTo(W, H);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(129,199,132,0.35)';
+  ctx.fill();
+
+  // 溪流（中部缓慢流动的波浪）
+  ctx.beginPath();
+  for (var x = 0; x <= W; x += 3) {
+    var y = H * 0.48 + Math.sin(x * 0.025 + heartscapePhase * 0.4) * 4 + Math.sin(x * 0.05 + heartscapePhase * 0.6) * 2;
+    if (x === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.strokeStyle = 'rgba(100,181,246,0.45)';
+  ctx.lineWidth = 1.8;
+  ctx.stroke();
+
+  // 阳光穿过树叶的光斑（核心元素）
+  for (var i = 0; i < 7; i++) {
+    var sx = W * 0.08 + (i % 4) * W * 0.24 + Math.sin(heartscapePhase * 0.25 + i * 1.3) * 12;
+    var sy = H * 0.15 + Math.floor(i / 4) * H * 0.35 + Math.cos(heartscapePhase * 0.2 + i * 1.7) * 8;
+    var sr = 10 + Math.sin(heartscapePhase * 0.6 + i) * 4;
+
+    // 主光斑
+    var sg = ctx.createRadialGradient(sx, sy, 0, sx, sy, sr * 3);
+    sg.addColorStop(0, 'rgba(255,255,200,0.7)');
+    sg.addColorStop(0.3, 'rgba(255,249,196,0.4)');
+    sg.addColorStop(0.7, 'rgba(200,230,201,0.15)');
+    sg.addColorStop(1, 'rgba(200,230,201,0)');
+    ctx.fillStyle = sg;
+    ctx.beginPath();
+    ctx.arc(sx, sy, sr * 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 树叶阴影（简化椭圆形）
+    ctx.save();
+    ctx.globalAlpha = 0.12;
+    ctx.fillStyle = '#2e7d32';
+    ctx.beginPath();
+    ctx.ellipse(sx + 3, sy + 2, sr * 0.8, sr * 0.5, Math.sin(heartscapePhase * 0.3 + i) * 0.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // 柔和粒子（微风吹拂的蒲公英/光点）
+  for (var k = 0; k < 18; k++) {
+    var seed = k * 137.5;
+    var px = (seed % W + heartscapePhase * (8 + k % 5) + Math.sin(heartscapePhase * 0.5 + k) * 20) % W;
+    var py = (seed * 0.7 % H + heartscapePhase * (3 + k % 3)) % H;
+    var pr = 1.2 + Math.sin(heartscapePhase * 1.5 + k) * 0.5;
+    ctx.beginPath();
+    ctx.arc(px, py, pr, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff';
+    ctx.globalAlpha = 0.25 + Math.sin(heartscapePhase + k * 0.8) * 0.15;
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawQQVizHigh(ctx, W, H) {
+  // 背景：从暖橙到冷蓝的色彩渐变（冷色调为主）
+  var bg = ctx.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0, 'rgba(255,183,77,0.2)');
+  bg.addColorStop(0.4, 'rgba(129,212,250,0.25)');
+  bg.addColorStop(1, 'rgba(100,181,246,0.35)');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // 雾中森林背景（简化竖直线条）
+  ctx.save();
+  ctx.globalAlpha = 0.15;
+  for (var t = 0; t < 12; t++) {
+    var tx = W * 0.05 + t * W * 0.08;
+    var th = H * 0.3 + Math.sin(t * 0.8) * H * 0.15;
+    ctx.beginPath();
+    ctx.moveTo(tx, H);
+    ctx.lineTo(tx + Math.sin(heartscapePhase * 0.2 + t) * 3, H - th);
+    ctx.strokeStyle = '#78909c';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // 呼吸引导圆（核心元素：缓慢扩张和收缩）
+  var breatheT = Math.sin(heartscapePhase * 0.5) * 0.5 + 0.5; // 0~1 呼吸周期
+  var breatheR = 12 + breatheT * 20; // 半径随呼吸变化
+  for (var i = 0; i < 3; i++) {
+    var br = breatheR * (1 - i * 0.25);
+    var bAlpha = 0.3 - i * 0.08;
+    ctx.beginPath();
+    ctx.arc(W / 2, H / 2, br, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(129,212,250,' + bAlpha + ')';
+    ctx.lineWidth = 1.5 - i * 0.3;
+    ctx.stroke();
+
+    // 填充（轻微发光效果）
+    if (i === 0) {
+      var bglow = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, br);
+      bglow.addColorStop(0, 'rgba(129,212,250,0.08)');
+      bglow.addColorStop(1, 'rgba(129,212,250,0)');
+      ctx.fillStyle = bglow;
+      ctx.fill();
+    }
+  }
+
+  // 海浪（底部随呼吸起伏的曲线）
+  ctx.beginPath();
+  for (var x = 0; x <= W; x += 4) {
+    var waveY = H * 0.75 + Math.sin(x * 0.02 + heartscapePhase * 0.3) * (6 + breatheT * 4) + Math.sin(x * 0.04 + heartscapePhase * 0.5) * 3;
+    if (x === 0) ctx.moveTo(x, waveY);
+    else ctx.lineTo(x, waveY);
+  }
+  ctx.strokeStyle = 'rgba(100,181,246,0.4)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 缓慢飘落的花瓣（冷色调：白/淡蓝）
+  for (var p = 0; p < 8; p++) {
+    var px = W * 0.1 + (p * 47) % W + Math.sin(heartscapePhase * 0.3 + p) * 10;
+    var py = ((p * 29 + heartscapePhase * (5 + p % 3) * 10) % (H * 1.2) - H * 0.1 + H) % H;
+    var prot = heartscapePhase * 0.5 + p * 0.8;
+    var pSize = 3 + Math.sin(p) * 1.5;
+
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate(prot);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, pSize, pSize * 0.6, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(225,245,254,' + (0.5 + Math.sin(heartscapePhase + p) * 0.2) + ')';
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // 冷色粒子（雾气感）
+  for (var k = 0; k < 14; k++) {
+    var kx = Math.random() * W;
+    var ky = Math.random() * H;
+    ctx.beginPath();
+    ctx.arc(kx, ky, 1.5, 0, Math.PI * 2);
+    ctx.fillStyle = '#b3e5fc';
+    ctx.globalAlpha = 0.3 + Math.sin(heartscapePhase * 0.8 + k) * 0.15;
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawQQVizLow(ctx, W, H) {
+  // 背景：暖黄与浅橙色调（中等饱和度）
+  var bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, 'rgba(255,213,79,0.35)');
+  bg.addColorStop(0.5, 'rgba(255,183,77,0.3)');
+  bg.addColorStop(1, 'rgba(255,152,0,0.25)');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // 花海（底部多彩渐变带）
+  var flowerGrad = ctx.createLinearGradient(0, H * 0.6, W, H);
+  flowerGrad.addColorStop(0, 'rgba(255,138,101,0.3)');
+  flowerGrad.addColorStop(0.3, 'rgba(255,183,77,0.35)');
+  flowerGrad.addColorStop(0.6, 'rgba(255,213,79,0.3)');
+  flowerGrad.addColorStop(1, 'rgba(255,112,67,0.25)');
+  ctx.fillStyle = flowerGrad;
+  ctx.fillRect(0, H * 0.6, W, H * 0.4);
+
+  // 花海细节（简化小花）
+  for (var f = 0; f < 15; f++) {
+    var fx = (f * 37) % W;
+    var fy = H * 0.65 + (f * 23) % (H * 0.3);
+    var fr = 2 + Math.sin(heartscapePhase * 0.5 + f) * 0.8;
+    ctx.beginPath();
+    ctx.arc(fx, fy, fr, 0, Math.PI * 2);
+    ctx.fillStyle = f % 3 === 0 ? 'rgba(255,112,67,0.5)' : f % 3 === 1 ? 'rgba(255,183,77,0.5)' : 'rgba(255,213,79,0.5)';
+    ctx.fill();
+  }
+
+  // 日出时分（顶部暖色光晕）
+  var sunGlow = ctx.createRadialGradient(W * 0.5, -H * 0.1, 0, W * 0.5, -H * 0.1, H * 0.8);
+  sunGlow.addColorStop(0, 'rgba(255,213,79,0.3)');
+  sunGlow.addColorStop(0.5, 'rgba(255,183,77,0.15)');
+  sunGlow.addColorStop(1, 'rgba(255,152,0,0)');
+  ctx.fillStyle = sunGlow;
+  ctx.fillRect(0, 0, W, H * 0.5);
+
+  // 缓慢移动的金色光斑（核心元素：节奏稍快）
+  for (var i = 0; i < 6; i++) {
+    var gx = W * 0.05 + (i % 3) * W * 0.35 + Math.sin(heartscapePhase * 0.6 + i * 1.2) * 15 + Math.cos(heartscapePhase * 0.3 + i) * 8;
+    var gy = H * 0.15 + Math.floor(i / 3) * H * 0.4 + Math.sin(heartscapePhase * 0.5 + i * 1.5) * 10;
+    var gr = 8 + Math.sin(heartscapePhase * 0.9 + i) * 3;
+
+    var gg = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr * 2.5);
+    gg.addColorStop(0, 'rgba(255,224,130,0.7)');
+    gg.addColorStop(0.4, 'rgba(255,183,77,0.4)');
+    gg.addColorStop(1, 'rgba(255,152,0,0)');
+    ctx.fillStyle = gg;
+    ctx.beginPath();
+    ctx.arc(gx, gy, gr * 2.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 飘落的花瓣（暖色调：橙/黄）
+  for (var p = 0; p < 6; p++) {
+    var px = W * 0.1 + (p * 53) % W + Math.sin(heartscapePhase * 0.4 + p) * 8;
+    var py = ((p * 37 + heartscapePhase * (8 + p % 4) * 8) % (H * 1.3) - H * 0.1 + H) % H;
+    var prot = heartscapePhase * 0.6 + p * 1.0;
+    var pSize = 3.5 + Math.sin(p * 1.3) * 1.5;
+
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate(prot);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, pSize, pSize * 0.5, 0, 0, Math.PI * 2);
+    ctx.fillStyle = p % 2 === 0 ? 'rgba(255,183,77,0.5)' : 'rgba(255,213,79,0.45)';
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // 暖色粒子（积极治愈感）
+  for (var k = 0; k < 16; k++) {
+    var seed = k * 137.5;
+    var kx = (seed % W + heartscapePhase * (10 + k % 4)) % W;
+    var ky = (seed * 0.6 % H + heartscapePhase * (5 + k % 3)) % H;
+    ctx.beginPath();
+    ctx.arc(kx, ky, 1.5, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffcc80';
+    ctx.globalAlpha = 0.35 + Math.sin(heartscapePhase * 1.2 + k) * 0.15;
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawQQVizCrisis(ctx, W, H) {
+  // 背景：中性偏暖色调，低对比度
+  var bg = ctx.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0, 'rgba(255,224,130,0.2)');
+  bg.addColorStop(0.5, 'rgba(225,245,254,0.15)');
+  bg.addColorStop(1, 'rgba(200,230,201,0.2)');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // 温暖的海边小屋（左侧简化轮廓）
+  ctx.save();
+  ctx.globalAlpha = 0.4;
+  var houseX = W * 0.08;
+  var houseY = H * 0.45;
+  // 屋顶
+  ctx.beginPath();
+  ctx.moveTo(houseX - 12, houseY);
+  ctx.lineTo(houseX, houseY - 15);
+  ctx.lineTo(houseX + 12, houseY);
+  ctx.closePath();
+  ctx.fillStyle = '#8d6e63';
+  ctx.fill();
+  // 屋身
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(houseX - 10, houseY, 20, 16);
+  // 窗户（暖光）
+  var winGlow = ctx.createRadialGradient(houseX, houseY + 6, 0, houseX, houseY + 6, 8);
+  winGlow.addColorStop(0, 'rgba(255,224,130,0.6)');
+  winGlow.addColorStop(1, 'rgba(255,183,77,0)');
+  ctx.fillStyle = winGlow;
+  ctx.beginPath();
+  ctx.arc(houseX, houseY + 6, 8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // 光隧道（核心元素：缓慢流动）
+  var tunnelT = Math.sin(heartscapePhase * 0.3) * 0.5 + 0.5;
+  for (var i = 0; i < 5; i++) {
+    var tr = 8 + i * 14 + tunnelT * 5;
+    var tAlpha = 0.25 - i * 0.045;
+    ctx.beginPath();
+    ctx.arc(W * 0.65, H / 2, tr, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,224,130,' + tAlpha + ')';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+  }
+
+  // 呼吸波纹（从光隧道中心扩散）
+  for (var w = 0; w < 3; w++) {
+    var wr = (heartscapePhase * (8 + w * 5) + w * 30) % 60;
+    var wAlpha = 1 - wr / 60;
+    ctx.beginPath();
+    ctx.arc(W * 0.65, H / 2, wr, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(129,212,250,' + (wAlpha * 0.3) + ')';
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+  }
+
+  // 柔和呼吸波纹（更宽的波纹）
+  var breatheR = 20 + Math.sin(heartscapePhase * 0.4) * 10;
+  ctx.beginPath();
+  ctx.arc(W * 0.65, H / 2, breatheR, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255,224,130,0.15)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // 安全文字（核心提示）
+  ctx.save();
+  var textAlpha = 0.6 + Math.sin(heartscapePhase * 0.5) * 0.2;
+  ctx.globalAlpha = textAlpha;
+
+  // 文字背景光晕
+  var textGlow = ctx.createRadialGradient(W * 0.65, H * 0.72, 0, W * 0.65, H * 0.72, 40);
+  textGlow.addColorStop(0, 'rgba(255,249,196,0.3)');
+  textGlow.addColorStop(1, 'rgba(255,249,196,0)');
+  ctx.fillStyle = textGlow;
+  ctx.fillRect(W * 0.65 - 40, H * 0.72 - 12, 80, 24);
+
+  ctx.font = '11px "PingFang SC", sans-serif';
+  ctx.fillStyle = 'rgba(255,249,196,0.85)';
+  ctx.textAlign = 'center';
+  ctx.fillText('深呼吸，你是安全的', W * 0.65, H * 0.72);
+  ctx.restore();
+
+  // 温暖粒子（安全感）
+  for (var k = 0; k < 10; k++) {
+    var seed = k * 137.5;
+    var kx = (seed % W + heartscapePhase * (4 + k % 3)) % W;
+    var ky = (seed * 0.8 % H + heartscapePhase * (2 + k % 2)) % H;
+    ctx.beginPath();
+    ctx.arc(kx, ky, 1.2, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffe082';
+    ctx.globalAlpha = 0.3 + Math.sin(heartscapePhase * 0.7 + k) * 0.15;
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+// ===== 蓝牙连接模拟 =====
+function toggleQQBT() {
+  qqBTConnected = !qqBTConnected;
+  var statusEl = document.getElementById('qq-bt-status');
+  var btnEl = document.getElementById('qq-bt-btn');
+  if (qqBTConnected) {
+    statusEl.textContent = '🟢 已连接 HeartGuard 手表';
+    statusEl.classList.remove('disconnected');
+    btnEl.textContent = '🟢 已连接';
+    btnEl.style.borderColor = 'rgba(76,175,80,0.5)';
+    btnEl.style.color = '#4caf50';
+    showNotification('🟢 QQ音乐已连接手表 · 音乐同步中');
+  } else {
+    statusEl.textContent = '🔴 手表未连接';
+    statusEl.classList.add('disconnected');
+    btnEl.textContent = '🔗 连接手表';
+    btnEl.style.borderColor = 'rgba(79,195,247,0.4)';
+    btnEl.style.color = '#4fc3f7';
+    showNotification('🔴 已断开手表连接');
+  }
+}
+
+// 同步音频事件到QQ界面
+(function patchAudioForQQ() {
+  var origEnsure = ensureAudio;
+  // 在 togglePlay / loadSong 之后刷新QQ界面
+  var _origLoad = null;
+  // 用定时器同步进度
+  setInterval(function() {
+    if (!audioEl || !document.getElementById('qq-music-overlay').classList.contains('show')) return;
+    if (audioEl.duration && isFinite(audioEl.duration)) {
+      var pct = (audioEl.currentTime / audioEl.duration) * 100;
+      document.getElementById('qq-progress-fill').style.width = pct + '%';
+      document.getElementById('qq-progress-dot').style.left = pct + '%';
+      document.getElementById('qq-time-cur').textContent = formatTime(audioEl.currentTime);
+      document.getElementById('qq-time-total').textContent = formatTime(audioEl.duration);
+    }
+  }, 500);
+})();
+
+// ===== 初始化 =====
+updateClock();
+setInterval(updateClock, 1000);
+updateHRRing(72);
+loadSong();
+initViz();
+startVizLoop();
+
+// 心率目标变化（演示用）
+setTimeout(function changeHRTarget() {
+  var modes = ['good', 'high', 'low', 'good'];
+  var targets = [72, 105, 48, 72];
+  var idx = Math.floor(Math.random() * modes.length);
+  state.currentMode = modes[idx];
+  state.hrTarget = targets[idx];
+  state.currentSongIdx = 0;
+  loadSong();
+  updateMoodBar(modes[idx]);
+  setTimeout(changeHRTarget, 12000 + Math.random() * 8000);
+}, 5000);
+</script>
+
+
+<!-- QQ音乐 H5 播放器 -->
+<div id="qq-music-overlay">
+  <div class="qq-top-bar">
+    <button class="qq-top-btn" onclick="closeQQMusic()">‹</button>
+    <div class="qq-top-title">QQ音乐 · 疗愈专区</div>
+    <button class="qq-top-btn" onclick="toggleQQBT()">⟳</button>
+  </div>
+
+  <div class="qq-album-area">
+    <div class="qq-album-disc" id="qq-disc">
+      <div class="qq-album-inner">
+        <div class="qq-album-hole"></div>
+        <span id="qq-disc-icon">🎵</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="qq-song-info">
+    <div class="qq-song-name" id="qq-song-name">未选择歌曲</div>
+    <div class="qq-song-artist" id="qq-song-artist">HeartGuard 疗愈专区</div>
+    <div class="qq-bt-status" id="qq-bt-status">🔴 手表未连接</div>
+  </div>
+
+  <div class="qq-progress-area">
+    <div class="qq-progress-bar" onclick="seekQQProgress(event)">
+      <div class="qq-progress-fill" id="qq-progress-fill"></div>
+      <div class="qq-progress-dot" id="qq-progress-dot"></div>
+    </div>
+    <div class="qq-progress-time">
+      <span id="qq-time-cur">0:00</span>
+      <span id="qq-time-total">0:00</span>
+    </div>
+  </div>
+
+  <div class="qq-controls">
+    <button class="qq-ctrl-btn" onclick="qqPrev()">⏮</button>
+    <button class="qq-play-btn" id="qq-play-btn" onclick="qqTogglePlay()">▶</button>
+    <button class="qq-ctrl-btn" onclick="qqNext()">⏭</button>
+  </div>
+
+  <div class="qq-viz-area">
+    <canvas class="qq-viz-canvas" id="qq-viz-canvas"></canvas>
+  </div>
+
+  <div class="qq-bt-panel">
+    <button class="qq-bt-connect-btn" id="qq-bt-btn" onclick="toggleQQBT()">🔗 连接手表</button>
+    <a class="qq-watch-preview" onclick="closeQQMusic(); gotoScreen('home');">⌚ 查看手表</a>
+  </div>
+</div>
+
+<!-- 全局错误捕获 -->
+<script>
+window.onerror = function(msg, src, line, col, err) {
+  var d = document.getElementById('screen-home');
+  if (d) {
+    var e = document.createElement('div');
+    e.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:rgba(244,67,54,0.9);color:white;padding:8px;font-size:10px;z-index:9999;word-break:break-all;';
+    e.textContent = 'JS错误: ' + (msg || '') + ' (行:' + (line || '') + ')';
+    document.body.appendChild(e);
+  }
+};
+</script>
+
+</body>
+</html>
