@@ -148,6 +148,10 @@
   .ms-play-icon.show { opacity: 1; }
   /* 底部情绪标签热区 */
   .ms-hot-mood { top: 87.5%; height: 5.5%; border-radius: 12px; }
+  /* 歌曲信息覆盖（松设计稿上方）*/
+  .ms-song-overlay { position: absolute; left: 12%; top: 57%; width: 76%; z-index: 7; pointer-events: none; text-align: center; }
+  .ms-song-ov-name { font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.95); text-shadow: 0 1px 6px rgba(0,0,0,0.6); }
+  .ms-song-ov-artist { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 2px; text-shadow: 0 1px 4px rgba(0,0,0,0.5); }
 
   /* 呼吸屏 */
   #screen-breathe { align-items: center; justify-content: center; }
@@ -329,7 +333,6 @@
         <button class="ms-hot ms-hot-mood" style="left:47%;  width:14%;" onclick="switchDesign(2)"></button>
         <button class="ms-hot ms-hot-mood" style="left:64%;  width:14%;" onclick="switchDesign(3)"></button>
         <button class="ms-hot ms-hot-mood" style="left:78%;  width:18%;" onclick="switchDesign(4)"></button>
-        <!-- 隐藏的 DOM 占位（JS 还在引用这些 ID）-->
         <span id="music-title"    style="display:none"></span>
         <span id="music-artist"   style="display:none"></span>
         <span id="progress-cur"   style="display:none"></span>
@@ -338,6 +341,8 @@
         <span id="ms-hrtext"      style="display:none"></span>
         <span id="ms-hrbpm"       style="display:none"></span>
         <span id="ms-moods"       style="display:none"></span>
+        <!-- 歌曲名覆盖层 -->
+        <div class="ms-song-overlay" id="ms-song-overlay"><div class="ms-song-ov-name" id="ms-song-ov-name">七月上</div><div class="ms-song-ov-artist" id="ms-song-ov-artist">Jam</div></div>
       </div>
     </div>
 
@@ -988,6 +993,11 @@ function loadSong() {
   var song = list[state.currentSongIdx % list.length];
   document.getElementById('music-title').textContent = song.name;
   document.getElementById('music-artist').textContent = song.artist;
+  // 同步歌曲覆盖层
+  var n = document.getElementById('ms-song-ov-name');
+  var a = document.getElementById('ms-song-ov-artist');
+  if (n) n.textContent = song.name;
+  if (a) a.textContent = song.artist;
   document.getElementById('progress-fill').style.width = '0%';
   document.getElementById('progress-cur').textContent = '0:00';
   document.getElementById('progress-total').textContent = '--:--';
@@ -1028,12 +1038,16 @@ function nextSong() {
   var song = list[state.currentSongIdx % list.length];
   document.getElementById('music-title').textContent = song.name;
   document.getElementById('music-artist').textContent = song.artist;
+  var n = document.getElementById('ms-song-ov-name');
+  var a = document.getElementById('ms-song-ov-artist');
+  if (n) n.textContent = song.name;
+  if (a) a.textContent = song.artist;
   state._songName = song.name;
   state._songArtist = song.artist;
-  var a = ensureAudio();
-  a.src = getSongUrl(song.id);
-  a.load();
-  if (state.isPlaying) { a.play().catch(function(){}); }
+  var ael = ensureAudio();
+  ael.src = getSongUrl(song.id);
+  ael.load();
+  if (state.isPlaying) { ael.play().catch(function(){}); }
 }
 function prevSong() {
   state.currentSongIdx--;
@@ -1042,6 +1056,10 @@ function prevSong() {
   var song = list[state.currentSongIdx % list.length];
   document.getElementById('music-title').textContent = song.name;
   document.getElementById('music-artist').textContent = song.artist;
+  var n2 = document.getElementById('ms-song-ov-name');
+  var a2 = document.getElementById('ms-song-ov-artist');
+  if (n2) n2.textContent = song.name;
+  if (a2) a2.textContent = song.artist;
   state._songName = song.name;
   state._songArtist = song.artist;
   var a = ensureAudio();
