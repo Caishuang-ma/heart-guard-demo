@@ -592,32 +592,32 @@ var state = {
 // crisis(危机) = 60 BPM，G大调，坚定希望 → 危机干预
 var songLibrary = {
   good: [
-    { name: '海阔天空', artist: 'Beyond' },
-    { name: '起风了',     artist: '买辣椒也用券' },
-    { name: '晴天',       artist: '周杰伦' },
-    { name: '小幸运',     artist: '田馥甄' },
-    { name: '平凡之路',   artist: '朴树' }
+    { name: '起风了',     artist: '买辣椒也用券', file: '起风了 - 买辣椒也用券.mp3' },
+    { name: '晴天',       artist: '周杰伦', file: '晴天 - 周杰伦.mp3' },
+    { name: '小幸运',     artist: '田馥甄', file: '小幸运 - 田馥甄.mp3' },
+    { name: '海阔天空', artist: 'Beyond', file: '海阔天空 - Beyond.mp3' },
+    { name: '平凡之路',   artist: '朴树', file: '平凡之路 - Westlife.mp3', note: 'Westlife 翻唱版' }
   ],
   high: [
-    { name: '蓝莲花',           artist: '许巍' },
-    { name: '夜空中最亮的星',   artist: '逃跑计划' },
-    { name: '追梦赤子心',       artist: 'GALA' },
-    { name: '怒放的生命',       artist: '汪峰' },
-    { name: '曾经的你',         artist: '许巍' }
+    { name: '蓝莲花',           artist: '许巍', file: '蓝莲花（现场版） - 许巍.mp3', note: '现场版' },
+    { name: '夜空中最亮的星',   artist: '逃跑计划', file: '夜空中最亮的星 - 秦岚.mp3', note: '秦岚 翻唱' },
+    { name: '追梦赤子心',       artist: 'GALA', file: '追梦赤子心 - 华晨宇等.mp3', note: '华晨宇等 翻唱' },
+    { name: '怒放的生命',       artist: '汪峰', file: '怒放的生命 - 萧敬腾&肖懿航.mp3', note: '萧敬腾&肖懿航 翻唱' },
+    { name: '曾经的你',         artist: '许巍', file: '曾经的你（现场版） - 许巍.mp3', note: '现场版' }
   ],
   low: [
-    { name: '仓央嘉措情歌',     artist: '前冲' },
-    { name: '南山南',           artist: '马頔' },
-    { name: '安河桥',           artist: '宋冬野' },
-    { name: '七月上',           artist: 'Jam' },
-    { name: '成都',             artist: '赵雷' }
+    { name: '仓央嘉措情歌',     artist: '前冲', file: '仓央嘉措情歌 - 前冲.mp3' },
+    { name: '南山南',           artist: '马頔', file: '南山南 - 马頔.mp3' },
+    { name: '安河桥',           artist: '宋冬野', file: '安河桥 - 宋冬野.mp3' },
+    { name: '七月上',           artist: 'Jam', file: '七月上 - Jam.mp3' },
+    { name: '成都',             artist: '赵雷', file: '成都 - 曲肖冰.mp3', note: '曲肖冰 翻唱' }
   ],
   crisis: [
-    { name: '海阔天空',         artist: 'Beyond' },
-    { name: '平凡之路',         artist: '朴树' },
-    { name: '夜空中最亮的星',   artist: '逃跑计划' },
-    { name: '隐形的翅膀',       artist: '张韶涵' },
-    { name: '明天会更好',       artist: '群星' }
+    { name: '海阔天空',         artist: 'Beyond', file: '海阔天空 - Beyond.mp3' },
+    { name: '平凡之路',         artist: '朴树', file: '平凡之路 - Westlife.mp3', note: 'Westlife 翻唱版' },
+    { name: '夜空中最亮的星',   artist: '逃跑计划', file: '夜空中最亮的星 - 秦岚.mp3', note: '秦岚 翻唱' },
+    { name: '隐形的翅膀',       artist: '张韶涵', file: '隐形的翅膀(Live) - 张韶涵.mp3', note: 'Live版' },
+    { name: '明天会更好',       artist: '群星', file: '明天会更好 - 群星.mp3' }
   ]
 };
 
@@ -1083,6 +1083,44 @@ function drawGardenHome() {
   gardenPhase += 0.012;
 }
 
+// ===== 真实MP3播放器（主播放通道）=====
+var musicAudio = null;
+
+function getAudio() {
+  if (!musicAudio) {
+    musicAudio = document.getElementById('music-audio');
+    if (musicAudio) {
+      // 歌曲播放结束 → 自动下一首
+      musicAudio.addEventListener('ended', function() {
+        if (tonePlaying) { nextSong(); }
+      });
+      // 实时进度条
+      musicAudio.addEventListener('timeupdate', function() {
+        if (musicAudio.duration && isFinite(musicAudio.duration)) {
+          var pct = (musicAudio.currentTime / musicAudio.duration) * 100;
+          var fill = document.getElementById('progress-fill');
+          if (fill) fill.style.width = pct + '%';
+          var dot = document.getElementById('prog-dot');
+          if (dot) dot.style.left = pct + '%';
+          var curEl = document.getElementById('prog-cur');
+          if (curEl) curEl.textContent = formatTime(musicAudio.currentTime);
+        }
+      });
+      // 元数据加载 → 更新总时长
+      musicAudio.addEventListener('loadedmetadata', function() {
+        var totEl = document.getElementById('prog-total');
+        if (totEl && isFinite(musicAudio.duration)) totEl.textContent = formatTime(musicAudio.duration);
+      });
+      // 加载错误 → 降级合成音
+      musicAudio.addEventListener('error', function() {
+        console.log('MP3 加载失败，降级为合成音');
+        playTonesSynth(state.currentMode, state.currentSongIdx);
+      });
+    }
+  }
+  return musicAudio;
+}
+
 // ===== 音频引擎 v8.0（多轨道合成器：和弦+旋律+脉冲+氛围+混响）=====
 var audioCtx = null, toneGain = null, toneNodes = [], tonePlaying = false;
 var masterVol = null; // 总音量控制
@@ -1207,16 +1245,68 @@ function playPulseNote(ctx, freq, startT, dur, vol) {
 
 // ===== 停止所有声音 =====
 function stopTones() {
+  // 停止合成音
   toneNodes.forEach(function(n) { try { n.stop(); } catch(e) {} });
   toneNodes = [];
   tonePlaying = false;
   if (toneGain && audioCtx) toneGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.06);
   if (fakePBar) { clearInterval(fakePBar); fakePBar = null; }
+  // 停止 MP3
+  if (musicAudio) {
+    musicAudio.pause();
+    musicAudio.currentTime = 0;
+  }
 }
 
-// ===== 多轨道音乐生成器 v8.0 =====
+// ===== 主播放入口：MP3 优先 → 合成音降级 =====
 function playTones(mode, songIdx) {
   stopTones();
+
+  var list = songLibrary[mode] || songLibrary.good;
+  var idx = (songIdx !== undefined ? songIdx : 0) % list.length;
+  var song = list[idx];
+  var cfg = MODE_CFG[mode] || MODE_CFG.good;
+
+  // 更新 UI
+  var label = cfg.bpmLabel + (song.note ? ' · ' + song.note : '');
+  var n = document.getElementById('ms-song-ov-name');
+  var a = document.getElementById('ms-song-ov-artist');
+  if (n) n.textContent = song.name;
+  if (a) a.textContent = song.artist + ' · ' + label;
+
+  state._songName = song.name;
+  state._songArtist = song.artist;
+
+  // 尝试 MP3 播放
+  var audio = getAudio();
+  if (audio && song.file) {
+    audio.src = 'music/' + encodeURIComponent(song.file);
+    audio.load();
+    var playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.then(function() {
+        tonePlaying = true;
+        setPlayState(true);
+        // 重置进度显示
+        document.getElementById('progress-fill').style.width = '0%';
+        document.getElementById('prog-dot').style.left = '0%';
+        document.getElementById('prog-cur').textContent = '0:00';
+        document.getElementById('prog-total').textContent = '--:--';
+        // 清除假进度
+        if (fakePBar) { clearInterval(fakePBar); fakePBar = null; }
+      }).catch(function(e) {
+        console.log('MP3 播放失败，降级合成音:', e);
+        playTonesSynth(mode, idx);
+      });
+    }
+  } else {
+    // 无 MP3 文件 → 直接用合成音
+    playTonesSynth(mode, idx);
+  }
+}
+
+// ===== 合成音（降级方案）=====
+function playTonesSynth(mode, songIdx) {
   var ctx = initAudioCtx();
   ensureReverb(ctx);
   var t = ctx.currentTime;
@@ -1229,13 +1319,12 @@ function playTones(mode, songIdx) {
   var dna = songDNA(song.name);
 
   // ===== 1. 和弦铺底（Pad，持续环境音）=====
-  var chordLen = cfg.tempo * 4; // 每个和弦持续4拍
+  var chordLen = cfg.tempo * 4;
   var numChords = Math.floor(cfg.dur / chordLen);
   var chordGain = ctx.createGain();
   chordGain.gain.value = 0;
   chordGain.gain.setTargetAtTime(cfg.chVol, t + 0.3, 2.0);
   chordGain.connect(toneGain);
-
   for (var ci = 0; ci < numChords; ci++) {
     var ch = chords[ci % chords.length];
     var cStart = t + 1 + ci * chordLen;
@@ -1244,21 +1333,17 @@ function playTones(mode, songIdx) {
     }
   }
 
-  // ===== 2. 钢琴旋律（每首歌独特的音符序列）=====
+  // ===== 2. 钢琴旋律 =====
   var melodyGain = ctx.createGain();
   melodyGain.gain.value = 0;
   melodyGain.gain.setTargetAtTime(cfg.mlVol, t + 1.5, 2.5);
   melodyGain.connect(toneGain);
-
-  // 用DNA种子生成独特的旋律模式
   var noteCount = 12 + (dna % 5);
   var melodyNotes = [];
   for (var mi = 0; mi < noteCount; mi++) {
     var si = ((dna >> (mi % 14)) + mi * 3 + (dna % 7)) % scale.length;
     melodyNotes.push(scale[si]);
   }
-
-  // 播放旋律（钢琴音色，带立体声）
   var mlStart = t + 2.5;
   for (var mn = 0; mn < melodyNotes.length; mn++) {
     var noteT = mlStart + mn * cfg.tempo;
@@ -1267,9 +1352,9 @@ function playTones(mode, songIdx) {
     createPianoNote(ctx, N[melodyNotes[mn]], noteT, noteD, cfg.mlVol, panVal);
   }
 
-  // ===== 3. 节奏脉冲（心跳/呼吸感）=====
+  // ===== 3. 节奏脉冲 =====
   var totalBeats = Math.floor((cfg.dur - 2) / cfg.tempo);
-  var rootFreq = N[scale[0]] * 0.5; // 根音低频脉冲
+  var rootFreq = N[scale[0]] * 0.5;
   for (var bi = 0; bi < totalBeats; bi++) {
     var beatT = t + 2 + bi * cfg.tempo;
     var isDownbeat = (bi % 4 === 0);
@@ -1278,7 +1363,7 @@ function playTones(mode, songIdx) {
     playPulseNote(ctx, isDownbeat ? rootFreq : rootFreq * 2, beatT, bDur, bVol);
   }
 
-  // ===== 4. 氛围层（高八度和弦泛音，增加空间感）=====
+  // ===== 4. 氛围层 =====
   var ambGain = ctx.createGain();
   ambGain.gain.value = 0;
   ambGain.gain.setTargetAtTime(cfg.chVol * 0.15, t + 3.0, 4.0);
@@ -1292,7 +1377,7 @@ function playTones(mode, songIdx) {
     }
   }
 
-  // ===== 5. 混响发送 =====
+  // ===== 5. 混响 =====
   if (feedbackDelay) {
     var sendGain = ctx.createGain();
     sendGain.gain.value = 0.25;
@@ -1300,17 +1385,15 @@ function playTones(mode, songIdx) {
     sendGain.connect(feedbackDelay);
   }
 
-  // 总音量淡入
   toneGain.gain.setTargetAtTime(1.0, t + 0.05, 1.0);
   tonePlaying = true;
 
-  // 更新UI：歌曲名 + 心率标签
   var n = document.getElementById('ms-song-ov-name');
   var a = document.getElementById('ms-song-ov-artist');
+  var label = cfg.bpmLabel + (song.note ? ' · ' + song.note : '');
   if (n) n.textContent = song.name;
-  if (a) a.textContent = song.artist + ' · ' + cfg.bpmLabel;
+  if (a) a.textContent = song.artist + ' · ' + label;
 
-  // 进度条同步
   startFakeProgress(cfg.dur);
   state._toneStart = t;
   state._songName = song.name;
@@ -1346,15 +1429,16 @@ function loadSong() {
   state._songName = song.name;
   state._songArtist = song.artist;
   var cfg = MODE_CFG[state.currentMode] || MODE_CFG.good;
+  var label = cfg.bpmLabel + (song.note ? ' · ' + song.note : '');
   var n = document.getElementById('ms-song-ov-name');
   var a = document.getElementById('ms-song-ov-artist');
   if (n) n.textContent = song.name;
-  if (a) a.textContent = song.artist + ' · ' + cfg.bpmLabel;
+  if (a) a.textContent = song.artist + ' · ' + label;
   document.getElementById('progress-fill').style.width = '0%';
   var dot = document.getElementById('prog-dot');
   if (dot) dot.style.left = '0%';
   document.getElementById('prog-cur').textContent = '0:00';
-  document.getElementById('prog-total').textContent = formatTime(cfg.dur);
+  document.getElementById('prog-total').textContent = '0:00';
   state.progressSec = 0;
 }
 
@@ -1624,8 +1708,8 @@ function simulateGood() {
   loadSong();
   gotoScreen('music');
   showNotification('💚 心率良好 · ' + (state._songName || '推荐疗愈音调'));
-  // 自动播放
-  setTimeout(function() { if (!state.isPlaying) togglePlay(); }, 600);
+  // 强制切到推荐歌曲（先停旧歌再播新歌）
+  setTimeout(function() { stopTones(); playTones(state.currentMode, 0); }, 300);
   // AI 对话
   setTimeout(function() { proactiveAI('good'); }, 2000);
 }
@@ -1637,9 +1721,7 @@ function simulateHighHR() {
   loadSong();
   gotoScreen('music');
   showNotification('💙 心率偏高 · ' + (state._songName || '推荐疗愈音调'));
-  setTimeout(function() {
-    if (!state.isPlaying) togglePlay();
-  }, 600);
+  setTimeout(function() { stopTones(); playTones(state.currentMode, 0); }, 300);
   setTimeout(function() { proactiveAI('high'); }, 2000);
 }
 function simulateLowHR() {
@@ -1650,9 +1732,7 @@ function simulateLowHR() {
   loadSong();
   gotoScreen('music');
   showNotification('💛 心率偏低 · ' + (state._songName || '推荐疗愈音调'));
-  setTimeout(function() {
-    if (!state.isPlaying) togglePlay();
-  }, 600);
+  setTimeout(function() { stopTones(); playTones(state.currentMode, 0); }, 300);
   setTimeout(function() { proactiveAI('low'); }, 2000);
 }
 function simulateCrisis() {
@@ -1664,9 +1744,7 @@ function simulateCrisis() {
   gotoScreen('music');
   showNotification('🆘 情绪危机 · ' + (state._songName || '紧急干预'));
   showAlert('⚠️ 检测到情绪危机状态\n已通知紧急联系人\n深呼吸，你是安全的');
-  setTimeout(function() {
-    if (!state.isPlaying) togglePlay();
-  }, 600);
+  setTimeout(function() { stopTones(); playTones(state.currentMode, 0); }, 300);
   setTimeout(function() { proactiveAI('crisis'); }, 2500);
 }
 
@@ -2326,6 +2404,9 @@ setTimeout(function changeHRTarget() {
 }, 5000);
 </script>
 
+
+<!-- 真实音频播放器（MP3） -->
+<audio id="music-audio" preload="auto" style="display:none"></audio>
 
 <!-- QQ音乐 H5 播放器 -->
 <div id="qq-music-overlay">

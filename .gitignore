@@ -3,3 +3,8 @@ index-v*.html
 .DS_Store
 __pycache__/
 *.pyc
+music/
+song_library.json
+download_songs.py
+download_alt.py
+retry_songs.py

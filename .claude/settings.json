@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p music)",
+      "Bash(py --version)",
+      "Read(//c/Users/macs/RGZN/agent_autogen/.conda//**)",
+      "Bash(/c/Users/macs/RGZN/agent_autogen/.conda/python --version)",
+      "Read(//c/Users/macs/AppData/Local/Programs/**)",
+      "Read(//c/Program Files/**)",
+      "Bash(where python *)",
+      "Bash(/c/Users/macs/RGZN/agent_autogen/.conda/python download_songs.py)",
+      "Bash(node -e ' *)",
+      "Bash(ipconfig)",
+      "Bash(awk '{print $NF}')",
+      "Bash(PYTHONIOENCODING=utf-8 /c/Users/macs/RGZN/agent_autogen/.conda/python server.py)",
+      "Bash(netstat -ano)",
+      "Bash(xargs taskkill //F //PID)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\" \"http://localhost:8765/\")",
+      "Bash(ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -R 80:localhost:8765 serveo.net)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\" -L \"https://b312eeca05b774ea-221-194-117-102.serveousercontent.com\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:8765/\")",
+      "Bash(taskkill //F //IM ssh.exe)",
+      "Bash(npx --yes localtunnel --port 8765)",
+      "Bash(sleep 5 && cat /c/Users/macs/AppData/Local/Temp/claude/c--Users-macs-Documents-GitHub-heart-guard-demo/d9305371-e764-4504-82cd-eb5d661e5c48/tasks/bdzybb81i.output 2>/dev/null | tail -20)",
+      "Read(//c/Users/macs/AppData/Local/Temp/claude/c--Users-macs-Documents-GitHub-heart-guard-demo/d9305371-e764-4504-82cd-eb5d661e5c48/tasks/**)",
+      "Bash(taskkill //F //IM node.exe)",
+      "Bash(curl -s -o /dev/null -w \"Local: HTTP %{http_code}\\\\n\" \"http://localhost:8765/\")",
+      "Bash(npx --yes bore-cli --port 8765 --to bore.pub)",
+      "Bash(ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -N -R 80:localhost:8765 nokey@localhost.run)",
+      "Bash(ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -R 80:localhost:8765 nokey@localhost.run)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\" -L --max-time 10 \"https://4d3761eed8e882.lhr.life\")"
+    ]
+  }
+}
